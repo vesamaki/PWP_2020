@@ -1,6 +1,5 @@
-from app import db, Deployment, Location, Sensor
+from app import db, User, Equipment, Component, Ride
 from datetime import datetime
-
 
 db.create_all()
 
