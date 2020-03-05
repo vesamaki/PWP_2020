@@ -8,4 +8,7 @@ __Remember to include all required documentation and HOWTOs, including how to cr
 
 **NOTES**
 
--- Timezoning. When providing time data to a request, tell also the timezone (store as UTC in database). Client can then convert as needed and deal with daylight saving time as well.
+-- Timezoning.
+When POSTing data over API to backend, require client timezone info in request body?
+
+When providing time data to a request, tell also the timezone (stored as UTC in database). Client can then convert as needed and deal with daylight saving time as well.
