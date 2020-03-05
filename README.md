@@ -6,4 +6,6 @@
 
 __Remember to include all required documentation and HOWTOs, including how to create and populate the database, how to run and test the API, the url to the entrypoint and instructions on how to setup and run the client__
 
+**NOTES**
 
+-- Timezoning. When providing time data to a request, tell also the timezone (store as UTC in database). Client can then convert as needed and deal with daylight saving time as well.
