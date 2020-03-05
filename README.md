@@ -1,5 +1,5 @@
 # PWP SPRING 2020
-# PROJECT NAME
+# Cyclist equipment usage API
 # Group information
 * Student 1. Vesa Mäki and vesa.maki@student.lut.fi
 
