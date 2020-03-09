@@ -15,3 +15,13 @@ When providing time data to a request, tell also the timezone (stored as UTC in 
 
 ***TODO:***
     docstrings to all.
+
+
+
+
+#### Running Flask ####  
+On Windows set the environment variable FLASK_APP to point to file API_flask_db.py -file. This can be done in command prompt, by browsing to folder containing the file and typing command:  
+set FLASK_APP=API_flask_db.py
+
+Then run flask with command:  
+flask run

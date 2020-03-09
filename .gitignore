@@ -1,3 +1,5 @@
 imgWiki/~$
 
 example_*
+*.pyc
+bike_API.db

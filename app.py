@@ -1,24 +1,5 @@
-from flask import Flask, request, abort, json
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import event
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.engine import Engine
-from werkzeug.exceptions import BadRequest
-from datetime import datetime
-
-import API_flask_db as APIdb
 
 
-app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///component_tracking.db"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-db = SQLAlchemy(app)
-
-@event.listens_for(Engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
-    cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.close()
 
 
 """
