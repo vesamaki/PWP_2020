@@ -1,16 +1,22 @@
+"""
+This module is used to test my PWP database of app.py.
+Run with:
+    pytest db_tests.py
+or with additional details:
+    pytest db_tests.py --cov --pep8
+"""
+
 import os
-import pytest
 import tempfile
 import time
 from datetime import datetime
+import pytest
 from sqlalchemy.engine import Engine
 from sqlalchemy import event
 from sqlalchemy.exc import IntegrityError, StatementError
 
-#import app
-#from app import User, Equipment, Component, Ride
-import API_flask_db
-from API_flask_db import Location, Sensor, Deployment, Measurement
+import app
+from app import User, Equipment, Component, Ride
 
 
 @event.listens_for(Engine, "connect")
@@ -18,6 +24,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
+
 
 # based on http://flask.pocoo.org/docs/1.0/testing/
 # we don't need a client for database testing, just the db handle
@@ -36,14 +43,17 @@ def db_handle():
     os.close(db_fd)
     os.unlink(db_fname)
 
-def _get_user(username):
+
+def _get_user(username="janne"):
     return User(
         name="user-{}".format(username)
     )
 
-def _get_equipment(cat="Mountain Bike", ret=False, own=1):
+
+def _get_equipment(cat="Mountain Bike", ret=False, own=1, number=1):
     if ret:
         equipout = Equipment(
+                        name="Bike-{}".format(number),
                         category="{}".format(cat),
                         brand="Kona",
                         model="HeiHei",
@@ -53,14 +63,16 @@ def _get_equipment(cat="Mountain Bike", ret=False, own=1):
                         )
     else:
         equipout = Equipment(
+                        name="Bike-{}".format(number),
                         category="{}".format(cat),
                         brand="Kona",
                         model="HeiHei",
                         date_added=datetime(2018, 11, 21, 11, 20, 30),
-                        #date_retired=datetime(2019, 11, 21, 11, 20, 30),
+                        # date_retired=datetime(2019, 11, 21, 11, 20, 30),
                         owner=own
                         )
     return equipout
+
 
 def _get_component(cat="Fork", ret=False, equi=1):
     if ret:
@@ -78,19 +90,21 @@ def _get_component(cat="Fork", ret=False, equi=1):
                         brand="Fox",
                         model="34 Factory",
                         date_added=datetime(2018, 11, 21, 11, 20, 30),
-                        #date_retired=datetime(2019, 11, 21, 11, 20, 30),
+                        # date_retired=datetime(2019, 11, 21, 11, 20, 30),
                         equipment_id=equi
                         )
-    return equipout
+    return compout
+
 
 def _get_ride(equi=1, rid=1):
     return Ride(
         name="Ajo-{}".format(rid),
         duration=120,
-        date_added=datetime.now(),
+        datetime=datetime.now(),
         equipment_id=equi,
         rider=rid
-    )
+        )
+
 
 def test_create_instances(db_handle):
     """
@@ -105,190 +119,287 @@ def test_create_instances(db_handle):
     equipment = _get_equipment()
     component = _get_component()
     ride = _get_ride()
-    sensor.location = location
-    measurement.sensor = sensor
-    deployment.sensors.append(sensor)
-    db_handle.session.add(location)
-    db_handle.session.add(sensor)
-    db_handle.session.add(measurement)
-    db_handle.session.add(deployment)
+    # Connect relationships (just one side)
+    equipment.ownedBy = user
+    component.installedTo = equipment
+    ride.riddenWith = equipment
+    ride.riddenBy = user
+    # Put to database
+    db_handle.session.add(user)
+    db_handle.session.add(equipment)
+    db_handle.session.add(component)
+    db_handle.session.add(ride)
     db_handle.session.commit()
 
     # Check that everything exists
-    assert Location.query.count() == 1
-    assert Sensor.query.count() == 1
-    assert Measurement.query.count() == 1
-    assert Deployment.query.count() == 1
-    db_sensor = Sensor.query.first()
-    db_measurement = Measurement.query.first()
-    db_location = Location.query.first()
-    db_deployment = Deployment.query.first()
+    assert User.query.count() == 1
+    assert Equipment.query.count() == 1
+    assert Component.query.count() == 1
+    assert Ride.query.count() == 1
+    db_user = User.query.first()
+    db_equipment = Equipment.query.first()
+    db_component = Component.query.first()
+    db_ride = Ride.query.first()
 
     # Check all relationships (both sides)
-    assert db_measurement.sensor == db_sensor
-    assert db_location.sensor == db_sensor
-    assert db_sensor.location == db_location
-    assert db_sensor in db_deployment.sensors
-    assert db_deployment in db_sensor.deployments
-    assert db_measurement in db_sensor.measurements
+    # One to one
+    assert db_user == db_ride.riddenBy
+    assert db_equipment == db_ride.riddenWith
+    # Others
+    assert db_equipment in db_user.hasEquip
+    assert db_component in db_equipment.hasCompos
 
-def test_location_sensor_one_to_one(db_handle):
+
+def test_ride_equipment_one_to_one(db_handle):
     """
-    Tests that the relationship between sensor and location is one-to-one.
-    i.e. that we cannot assign the same location for two sensors.
+    Tests that the relationship between ride and equipment is one-to-one.
+    i.e. that one ride cannot be ridden with more than one equipment.
     """
 
-    location = _get_location()
-    sensor_1 = _get_sensor(1)
-    sensor_2 = _get_sensor(2)
-    sensor_1.location = location
-    sensor_2.location = location
-    db_handle.session.add(location)
-    db_handle.session.add(sensor_1)
-    db_handle.session.add(sensor_2)
+    ride = _get_ride()
+    equipment_1 = _get_equipment(number=1)
+    equipment_2 = _get_equipment(number=2)
+    equipment_1.inRide = ride
+    equipment_2.inRide = ride
+    db_handle.session.add(ride)
+    db_handle.session.add(equipment_1)
+    db_handle.session.add(equipment_2)
     with pytest.raises(IntegrityError):
         db_handle.session.commit()
 
-def test_measurement_ondelete_sensor(db_handle):
+
+def test_equipment_ondelete_user(db_handle):
     """
-    Tests that measurement's sensor foreign key is set to null when the sensor
-    is deleted.
+    Tests that equipments's owner foreign key is set to null
+    when the user is deleted.
     """
 
-    measurement = _get_measurement()
-    sensor = _get_sensor()
-    measurement.sensor = sensor
-    db_handle.session.add(measurement)
+    equipment = _get_equipment()
+    user = _get_user()
+    equipment.ownedBy = user
+    db_handle.session.add(equipment)
     db_handle.session.commit()
-    db_handle.session.delete(sensor)
+    db_handle.session.delete(user)
     db_handle.session.commit()
-    assert measurement.sensor is None
+    assert equipment.owner is None
 
-def test_location_columns(db_handle):
+
+def test_component_ondelete_equipment(db_handle):
     """
-    Tests the types and restrictions of location columns. Checks that numerical
-    values only accepts numbers, and that all of the columns are optional.
+    Tests that components are deleted when parent equipment is deleted.
     """
 
-    location = _get_location()
-    location.latitude = str(location.latitude) + "°"
-    db_handle.session.add(location)
-    with pytest.raises(StatementError):
-        db_handle.session.commit()
-
-    db_handle.session.rollback()
-
-    location = _get_location()
-    location.longitude = str(location.longitude) + "°"
-    db_handle.session.add(location)
-    with pytest.raises(StatementError):
-        db_handle.session.commit()
-
-    db_handle.session.rollback()
-
-    location = _get_location()
-    location.altitude = str(location.altitude) + "m"
-    db_handle.session.add(location)
-    with pytest.raises(StatementError):
-        db_handle.session.commit()
-
-    db_handle.session.rollback()
-
-    location = Location()
-    db_handle.session.add(location)
+    user = _get_user()
+    equipment = _get_equipment()
+    component = _get_component()
+    component.owner = user
+    component.installedTo = equipment
+    db_handle.session.add(user)
+    db_handle.session.add(component)
     db_handle.session.commit()
+    db_handle.session.delete(equipment)
+    db_handle.session.commit()
+    assert Component.query.count() == 0
 
-def test_sensor_columns(db_handle):
+
+def test_user_columns(db_handle):
     """
-    Tests sensor columns' restrictions. Name must be unique, and name and model
-    must be mandatory.
+    Tests user columns' restrictions. Name must be unique and mandatory.
     """
 
-    sensor_1 = _get_sensor()
-    sensor_2 = _get_sensor()
-    db_handle.session.add(sensor_1)
-    db_handle.session.add(sensor_2)
+    # Uniqueness of name
+    user_1 = _get_user()
+    user_2 = _get_user()
+    db_handle.session.add(user_1)
+    db_handle.session.add(user_2)
     with pytest.raises(IntegrityError):
         db_handle.session.commit()
 
     db_handle.session.rollback()
 
-    sensor = _get_sensor()
-    sensor.name = None
-    db_handle.session.add(sensor)
+    # Not null
+    user = _get_user()
+    user.name = None
+    db_handle.session.add(user)
+    with pytest.raises(IntegrityError):
+        db_handle.session.commit()
+
+
+def test_equipment_columns(db_handle):
+    """
+    Tests equipment columns' restrictions. Category, brand, model and
+    date_added must be mandatory. Date_added and date_retired must be type
+    datetime and owner accepts only numerical values.
+    """
+
+    # Not null category
+    equipment = _get_equipment()
+    equipment.category = None
+    db_handle.session.add(equipment)
     with pytest.raises(IntegrityError):
         db_handle.session.commit()
 
     db_handle.session.rollback()
 
-    sensor = _get_sensor()
-    sensor.model = None
-    db_handle.session.add(sensor)
+    # Not null brand
+    equipment = _get_equipment()
+    equipment.brand = None
+    db_handle.session.add(equipment)
     with pytest.raises(IntegrityError):
         db_handle.session.commit()
 
-def test_measurement_columns(db_handle):
-    """
-    Tests that a measurement value only accepts floating point values and that
-    time only accepts datetime values.
-    """
+    db_handle.session.rollback()
 
-    measurement = _get_measurement()
-    measurement.value = str(measurement.value) + "kg"
-    db_handle.session.add(measurement)
+    # Not null model
+    equipment = _get_equipment()
+    equipment.model = None
+    db_handle.session.add(equipment)
+    with pytest.raises(IntegrityError):
+        db_handle.session.commit()
+
+    db_handle.session.rollback()
+
+    # Not null date_added
+    equipment = _get_equipment()
+    equipment.date_added = None
+    db_handle.session.add(equipment)
+    with pytest.raises(IntegrityError):
+        db_handle.session.commit()
+
+    db_handle.session.rollback()
+
+    # Type int owner
+    equipment = _get_equipment()
+    equipment.owner = str(equipment.owner) + "kg"
+    db_handle.session.add(equipment)
+    with pytest.raises(IntegrityError):
+        db_handle.session.commit()
+
+    db_handle.session.rollback()
+
+    # Type datetime date_added
+    equipment = _get_equipment()
+    equipment.date_added = time.time()
+    db_handle.session.add(equipment)
     with pytest.raises(StatementError):
         db_handle.session.commit()
 
     db_handle.session.rollback()
 
-    measurement = _get_measurement()
-    measurement.time = time.time()
-    db_handle.session.add(measurement)
+    # Type datetime date_retired
+    equipment = _get_equipment()
+    equipment.date_retired = time.time()
+    db_handle.session.add(equipment)
     with pytest.raises(StatementError):
         db_handle.session.commit()
 
-def test_deployment_columns(db_handle):
+
+def test_component_columns(db_handle):
     """
-    Tests that all columns in the deployment table are mandatory. Also tests
-    that start and end only accept datetime values.
+    Tests component columns' restrictions. Category, brand, model and
+    date_added must be mandatory. Date_added and date_retired must be type
+    datetime and equipment_id accepts only numerical values.
     """
 
-    # Tests for nullable
-    deployment = _get_deployment()
-    deployment.start = None
-    db_handle.session.add(deployment)
+    # Not null category
+    component = _get_component()
+    component.category = None
+    db_handle.session.add(component)
     with pytest.raises(IntegrityError):
         db_handle.session.commit()
 
     db_handle.session.rollback()
 
-    deployment = _get_deployment()
-    deployment.end = None
-    db_handle.session.add(deployment)
+    # Not null brand
+    component = _get_component()
+    component.brand = None
+    db_handle.session.add(component)
     with pytest.raises(IntegrityError):
         db_handle.session.commit()
 
     db_handle.session.rollback()
 
-    deployment = _get_deployment()
-    deployment.name = None
-    db_handle.session.add(deployment)
+    # Not null model
+    component = _get_component()
+    component.model = None
+    db_handle.session.add(component)
     with pytest.raises(IntegrityError):
         db_handle.session.commit()
 
     db_handle.session.rollback()
 
-    # Tests for column type
-    deployment = _get_deployment()
-    deployment.start = time.time()
-    db_handle.session.add(deployment)
+    # Not null date_added
+    component = _get_component()
+    component.date_added = None
+    db_handle.session.add(component)
+    with pytest.raises(IntegrityError):
+        db_handle.session.commit()
+
+    db_handle.session.rollback()
+
+    # Type int equipment_id
+    component = _get_component()
+    component.equipment_id = str(component.equipment_id) + "kg"
+    db_handle.session.add(component)
+    with pytest.raises(IntegrityError):
+        db_handle.session.commit()
+
+    db_handle.session.rollback()
+
+    # Type datetime date_added
+    component = _get_component()
+    component.date_added = time.time()
+    db_handle.session.add(component)
     with pytest.raises(StatementError):
         db_handle.session.commit()
 
     db_handle.session.rollback()
 
-    deployment = _get_deployment()
-    deployment.end = time.time()
-    db_handle.session.add(deployment)
+    # Type datetime date_retired
+    component = _get_component()
+    component.date_retired = time.time()
+    db_handle.session.add(component)
+    with pytest.raises(StatementError):
+        db_handle.session.commit()
+
+
+def test_ride_columns(db_handle):
+    """
+    Tests that columns duration and datetime are mandatory.
+    Tests that duration value only accepts integer values and that
+    datetime only accepts datetime values.
+    """
+
+    # Not null duration
+    ride = _get_ride()
+    ride.duration = None
+    db_handle.session.add(ride)
+    with pytest.raises(IntegrityError):
+        db_handle.session.commit()
+
+    db_handle.session.rollback()
+
+    # Not null datetime
+    ride = _get_ride()
+    ride.datetime = None
+    db_handle.session.add(ride)
+    with pytest.raises(IntegrityError):
+        db_handle.session.commit()
+
+    db_handle.session.rollback()
+
+    # Type int duration
+    ride = _get_ride()
+    ride.duration = str(ride.duration) + "kg"
+    db_handle.session.add(ride)
+    with pytest.raises(IntegrityError):
+        db_handle.session.commit()
+
+    db_handle.session.rollback()
+
+    # Type datetime
+    ride = _get_ride()
+    ride.datetime = time.time()
+    db_handle.session.add(ride)
     with pytest.raises(StatementError):
         db_handle.session.commit()
