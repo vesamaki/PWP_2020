@@ -1,3 +1,11 @@
+"""
+This module includes the functionality of
+    Cycling equipment usage API.
+Run with:
+    flask run
+See https://github.com/vesamaki/PWP_2020 for details
+"""
+
 from flask import Flask, request, abort, json
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.engine import Engine
@@ -7,6 +15,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import event
 
 
+# Utilized from PWP Ex1
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///bike_API.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -19,6 +28,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor.close()
 
 class Component(db.Model):
+    # Check that date_retired is not before date_added.
     __table_args__ = (db.CheckConstraint('date_retired > date_added',
                                          name='_c_add_bfr_retire_cc'),
                       db.UniqueConstraint("category", "equipment_id",
@@ -39,7 +49,7 @@ class Component(db.Model):
                              )
 
     installedTo = db.relationship("Equipment", back_populates="hasCompos")
-
+    # Adapted from PWP Ex2
     def __repr__(self):
         return "[{}] {} brand {} and model {}" \
             " added on {} and retired on {}," \
@@ -53,6 +63,7 @@ class Component(db.Model):
                                        )
 
 class Ride(db.Model):
+    # Check that 0 duration rides are not accepted.
     __table_args__ = (db.CheckConstraint('duration > 0',
                                          name='_no_zero_duration_cc'),
                       db.UniqueConstraint("name", "equipment_id",
@@ -79,7 +90,7 @@ class Ride(db.Model):
                                  back_populates="inRide"
                                  )
     riddenBy = db.relationship("User", back_populates="rode")
-
+    # Adapted from PWP Ex2
     def __repr__(self):
         return "[{}] {} duration {}" \
             " ridden on {} with {} by {}".format(self.id,
@@ -91,6 +102,7 @@ class Ride(db.Model):
                                                  )
 
 class Equipment(db.Model):
+    # Check that date_retired is not before date_added.
     __table_args__ = (db.CheckConstraint('date_retired > date_added',
                                          name='_e_add_bfr_retire_cc'),
                       db.UniqueConstraint("name", "owner",
@@ -111,6 +123,7 @@ class Equipment(db.Model):
                       )
 
     ownedBy = db.relationship("User", back_populates="hasEquip")
+    # Components will be deleted if equipment they belong to is deleted.
     hasCompos = db.relationship("Component",
                                 cascade="all, delete-orphan",
                                 back_populates="installedTo",
@@ -122,6 +135,7 @@ class Equipment(db.Model):
                              uselist=False,
                              order_by=(Ride.datetime, Ride.name)
                              )
+    # Adapted from PWP Ex2
     def __repr__(self):
         return "[{}] {}, brand {} and model {}" \
             " added on {} and retired on {}," \
@@ -149,6 +163,6 @@ class User(db.Model):
                            uselist=False,
                            order_by=(Ride.datetime, Ride.name)
                            )
-
+    # Adapted from PWP Ex2
     def __repr__(self):
         return "[{}] {}".format(self.id, self.name)

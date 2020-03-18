@@ -150,6 +150,217 @@ def test_create_instances(db_handle):
     assert db_component in db_equipment.hasCompos
 
 
+def test_user_query_mod_del(db_handle):
+    """
+    Tests the querying of a user instance
+    """
+    # Query
+    user = _get_user()
+    db_handle.session.add(user)
+    db_handle.session.commit()
+    user1 = User.query.filter_by(name="user-janne").first()
+    assert user1.name == "user-janne"
+
+
+def test_user_mod(db_handle):
+    """
+    Tests the modification of user instance data
+    """
+    # Modify
+    user = _get_user()
+    db_handle.session.add(user)
+    db_handle.session.commit()
+    user = User.query.filter_by(name="user-janne").first()
+    user.name = "user-joonas"
+    db_handle.session.commit()
+    user = User.query.filter_by(name="user-joonas").first()
+    assert user.name == "user-joonas"
+
+
+def test_user_del(db_handle):
+    """
+    Tests the deletion of a user instance
+    """
+    # Delete
+    user = _get_user()
+    db_handle.session.add(user)
+    db_handle.session.commit()
+    user = User.query.filter_by(name="user-janne").first()
+    db_handle.session.delete(user)
+    db_handle.session.commit()
+    assert User.query.count() == 0
+
+
+def test_equipment_query(db_handle):
+    """
+    Tests the querying of a equipment instance
+    """
+    # Query
+    user = _get_user()
+    equip = _get_equipment()
+    db_handle.session.add(user)
+    db_handle.session.add(equip)
+    db_handle.session.commit()
+    equip1 = Equipment.query.filter_by(name="Bike-1").first()
+    assert equip1.name == "Bike-1"
+
+
+def test_equipment_mod(db_handle):
+    """
+    Tests the modification of equipment instance data
+    """
+    # Modify
+    user = _get_user()
+    equip = _get_equipment()
+    db_handle.session.add(user)
+    db_handle.session.add(equip)
+    db_handle.session.commit()
+    equip = Equipment.query.get(1)
+    equip.name = "Bike-2"
+    equip.brand = "Canyon"
+    equip.model = "Spectral"
+    equip.date_added = datetime(2019, 11, 21, 11, 20, 30)
+    equip.date_retired = datetime(2020, 1, 1, 11, 20, 30)
+    db_handle.session.commit()
+    equip = Equipment.query.get(1)
+    assert equip.name == "Bike-2"
+    assert equip.brand == "Canyon"
+    assert equip.model == "Spectral"
+    assert str(equip.date_added) == "2019-11-21 11:20:30"
+    assert str(equip.date_retired) == "2020-01-01 11:20:30"
+
+
+def test_equipment_del(db_handle):
+    """
+    Tests the deletion of a equipment instance
+    """
+    # Delete
+    user = _get_user()
+    equip = _get_equipment()
+    db_handle.session.add(user)
+    db_handle.session.add(equip)
+    db_handle.session.commit()
+    equip = Equipment.query.get(1)
+    db_handle.session.delete(equip)
+    db_handle.session.commit()
+    assert Equipment.query.count() == 0
+
+
+def test_component_query(db_handle):
+    """
+    Tests the querying of a component instance
+    """
+    # Query
+    user = _get_user()
+    equip = _get_equipment()
+    component = _get_component()
+    db_handle.session.add(user)
+    db_handle.session.add(equip)
+    db_handle.session.add(component)
+    db_handle.session.commit()
+    component1 = Component.query.filter_by(brand="Fox").first()
+    assert component1.brand == "Fox"
+
+
+def test_component_mod(db_handle):
+    """
+    Tests the modification of component instance data
+    """
+    # Modify
+    user = _get_user()
+    equip = _get_equipment()
+    component = _get_component()
+    db_handle.session.add(user)
+    db_handle.session.add(equip)
+    db_handle.session.add(component)
+    db_handle.session.commit()
+    component.name = "Ekakeula"
+    component.brand = "Rock Shox"
+    component.model = "Pike RTC3"
+    component.date_added = datetime(2019, 11, 21, 11, 20, 30)
+    component.date_retired = datetime(2020, 1, 1, 11, 20, 30)
+    db_handle.session.commit()
+    component = Component.query.filter_by(category="Fork").first()
+    assert component.name == "Ekakeula"
+    assert component.brand == "Rock Shox"
+    assert component.model == "Pike RTC3"
+    assert str(component.date_added) == "2019-11-21 11:20:30"
+    assert str(component.date_retired) == "2020-01-01 11:20:30"
+
+
+def test_component_del(db_handle):
+    """
+    Tests the deletion of a component instance
+    """
+    # Delete
+    user = _get_user()
+    equip = _get_equipment()
+    component = _get_component()
+    db_handle.session.add(user)
+    db_handle.session.add(equip)
+    db_handle.session.add(component)
+    db_handle.session.commit()
+    component = Component.query.get(1)
+    db_handle.session.delete(component)
+    db_handle.session.commit()
+    assert Component.query.count() == 0
+
+
+def test_ride_query(db_handle):
+    """
+    Tests the querying of a ride instance
+    """
+    # Query
+    user = _get_user()
+    equip = _get_equipment()
+    ride = _get_ride()
+    db_handle.session.add(user)
+    db_handle.session.add(equip)
+    db_handle.session.add(ride)
+    db_handle.session.commit()
+    ride1 = Ride.query.filter_by(name="Ajo-1").first()
+    assert ride1.name == "Ajo-1"
+
+
+def test_ride_mod(db_handle):
+    """
+    Tests the modification of ride instance data
+    """
+    # Modify
+    user = _get_user()
+    equip = _get_equipment()
+    ride = _get_ride()
+    db_handle.session.add(user)
+    db_handle.session.add(equip)
+    db_handle.session.add(ride)
+    db_handle.session.commit()
+    ride.name = "Ajo-2"
+    ride.duration = 1200
+    ride.datetime = datetime(2020, 1, 1, 11, 20, 30)
+    db_handle.session.commit()
+    ride = Ride.query.get(1)
+    assert ride.name == "Ajo-2"
+    assert ride.duration == 1200
+    assert str(ride.datetime) == "2020-01-01 11:20:30"
+
+
+def test_ride_del(db_handle):
+    """
+    Tests the deletion of a ride instance
+    """
+    # Delete
+    user = _get_user()
+    equip = _get_equipment()
+    ride = _get_ride()
+    db_handle.session.add(user)
+    db_handle.session.add(equip)
+    db_handle.session.add(ride)
+    db_handle.session.commit()
+    db_handle.session.delete(ride)
+    db_handle.session.commit()
+    assert Ride.query.count() == 0
+
+
 def test_ride_equipment_one_to_one(db_handle):
     """
     Tests that the relationship between ride and equipment is one-to-one.
@@ -331,6 +542,16 @@ def test_component_columns(db_handle):
     date_added must be mandatory. Date_added and date_retired must be type
     datetime and equipment_id accepts only numerical values.
     """
+
+    # Uniqueness of category
+    component_1 = _get_component()
+    component_2 = _get_component()
+    db_handle.session.add(component_1)
+    db_handle.session.add(component_2)
+    with pytest.raises(IntegrityError):
+        db_handle.session.commit()
+
+    db_handle.session.rollback()
 
     # Not null category
     component = _get_component()

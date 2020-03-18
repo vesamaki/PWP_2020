@@ -1,7 +1,17 @@
+"""
+This module initializes the database of
+    Cycling equipment usage API.
+
+See https://github.com/vesamaki/PWP_2020 for details
+"""
+
 from app import db, User, Equipment, Component, Ride
 from datetime import datetime
 
 db.create_all()
+
+
+###### THE REST IS JUST EXAMPLE DATA ######
 
 user1 = User(name="janne")
 user2 = User(name="jenni")
@@ -33,9 +43,9 @@ newieroadie = Equipment(name="Jennin uus kilpuri",
                         owner=2 # Jenni
                         )
 
-comp1 = Component(category="Fork",
+comp1 = Component(category="Rear Shock",
                   brand="Fox",
-                  model="34 Factory",
+                  model="Factory Float",
                   date_added=datetime(2018, 11, 21, 11, 20, 30),
                   date_retired=datetime(2019, 11, 21, 11, 20, 30),
                   equipment_id=1    # Jannen mtb
