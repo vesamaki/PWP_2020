@@ -1,4 +1,4 @@
-from API_flask_db import db, User, Equipment, Component, Ride
+from app import db, User, Equipment, Component, Ride
 from datetime import datetime
 
 db.create_all()
@@ -59,28 +59,28 @@ comp3 = Component(category="Saddle",
 
 ride1 = Ride(name="Tahko MTB",
              duration=33540,
-             date_added=datetime(2018, 7, 16, 8, 15, 0),
+             datetime=datetime(2018, 7, 16, 8, 15, 0),
              equipment_id=1,
              rider=1
              )
 
 ride2 = Ride(name="Himos MTB",
              duration=23540,
-             date_added=datetime(2018, 8, 16, 16, 15, 0),
+             datetime=datetime(2018, 8, 16, 16, 15, 0),
              equipment_id=1,
              rider=1
              )
 
 ride3 = Ride(name="Vätternrundan",
              duration=33540, # 9h 19min
-             date_added=datetime(2018, 6, 16, 4, 15, 0),
+             datetime=datetime(2018, 6, 16, 4, 15, 0),
              equipment_id=2,
              rider=2
              )
 
 ride4 = Ride(name="Lohjanjärven pyöräily",
              duration=11540, # 9h 19min
-             date_added=datetime(2018, 5, 24, 10, 15, 0),
+             datetime=datetime(2018, 5, 24, 10, 15, 0),
              equipment_id=2,
              rider=2
              )

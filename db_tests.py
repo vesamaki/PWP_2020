@@ -227,10 +227,31 @@ def test_user_columns(db_handle):
 
 def test_equipment_columns(db_handle):
     """
-    Tests equipment columns' restrictions. Category, brand, model and
-    date_added must be mandatory. Date_added and date_retired must be type
-    datetime and owner accepts only numerical values.
+    Tests equipment columns' restrictions. Name must be unique.
+    Name, category, brand, model and date_added must be mandatory.
+    Date_added and date_retired must be type datetime and owner accepts
+    only numerical values.
+    Date_added must be less than date_retired.
     """
+
+    # Uniqueness of name
+    equip_1 = _get_equipment()
+    equip_2 = _get_equipment()
+    db_handle.session.add(equip_1)
+    db_handle.session.add(equip_2)
+    with pytest.raises(IntegrityError):
+        db_handle.session.commit()
+
+    db_handle.session.rollback()
+
+    # Not null name
+    equipment = _get_equipment()
+    equipment.name = None
+    db_handle.session.add(equipment)
+    with pytest.raises(IntegrityError):
+        db_handle.session.commit()
+
+    db_handle.session.rollback()
 
     # Not null category
     equipment = _get_equipment()
@@ -289,6 +310,16 @@ def test_equipment_columns(db_handle):
     # Type datetime date_retired
     equipment = _get_equipment()
     equipment.date_retired = time.time()
+    db_handle.session.add(equipment)
+    with pytest.raises(StatementError):
+        db_handle.session.commit()
+
+    db_handle.session.rollback()
+
+    # date_retired greater than date_added
+    equipment = _get_equipment()
+    equipment.date_added = datetime.now()
+    equipment.date_retired = datetime(2020, 1, 1, 0, 0, 0)
     db_handle.session.add(equipment)
     with pytest.raises(StatementError):
         db_handle.session.commit()
@@ -355,9 +386,10 @@ def test_component_columns(db_handle):
 
     db_handle.session.rollback()
 
-    # Type datetime date_retired
+    # date_retired greater than date_added
     component = _get_component()
-    component.date_retired = time.time()
+    component.date_added = datetime.now()
+    component.date_retired = datetime(2020, 1, 1, 0, 0, 0)
     db_handle.session.add(component)
     with pytest.raises(StatementError):
         db_handle.session.commit()
@@ -369,6 +401,25 @@ def test_ride_columns(db_handle):
     Tests that duration value only accepts integer values and that
     datetime only accepts datetime values.
     """
+
+    # Uniqueness of name
+    ride_1 = _get_ride()
+    ride_2 = _get_ride()
+    db_handle.session.add(ride_1)
+    db_handle.session.add(ride_2)
+    with pytest.raises(IntegrityError):
+        db_handle.session.commit()
+
+    db_handle.session.rollback()
+
+    # Not null name
+    ride = _get_ride()
+    ride.name = None
+    db_handle.session.add(ride)
+    with pytest.raises(IntegrityError):
+        db_handle.session.commit()
+
+    db_handle.session.rollback()
 
     # Not null duration
     ride = _get_ride()
@@ -400,6 +451,15 @@ def test_ride_columns(db_handle):
     # Type datetime
     ride = _get_ride()
     ride.datetime = time.time()
+    db_handle.session.add(ride)
+    with pytest.raises(StatementError):
+        db_handle.session.commit()
+
+    db_handle.session.rollback()
+
+    # duration greater than zero
+    ride = _get_ride()
+    ride.duration = 0
     db_handle.session.add(ride)
     with pytest.raises(StatementError):
         db_handle.session.commit()
