@@ -44,13 +44,23 @@ def db_handle():
     os.unlink(db_fname)
 
 
+# Adapted from Ex2
+# The below _get_ -functions are used by the tests to populate the database
 def _get_user(username="janne"):
+    """
+    Function used to set a user instance's data
+    Used by test-functions
+    """
     return User(
         name="user-{}".format(username)
     )
 
 
 def _get_equipment(cat="Mountain Bike", ret=False, own=1, number=1):
+    """
+    Function used to set an equipment instance's data
+    Used by test-functions
+    """
     if ret:
         equipout = Equipment(
                         name="Bike-{}".format(number),
@@ -75,6 +85,10 @@ def _get_equipment(cat="Mountain Bike", ret=False, own=1, number=1):
 
 
 def _get_component(cat="Fork", ret=False, equi=1):
+    """
+    Function used to set a component instance's data
+    Used by test-functions
+    """
     if ret:
         compout = Component(
                         category="{}".format(cat),
@@ -97,6 +111,10 @@ def _get_component(cat="Fork", ret=False, equi=1):
 
 
 def _get_ride(equi=1, rid=1):
+    """
+    Function used to set a ride instance's data
+    Used by test-functions
+    """
     return Ride(
         name="Ajo-{}".format(rid),
         duration=120,
