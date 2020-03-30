@@ -29,6 +29,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 
 class Component(db.Model):
     # Check that date_retired is not before date_added.
+    # Category and equipment_id form a unique entity.
     __table_args__ = (db.CheckConstraint('date_retired > date_added',
                                          name='_c_add_bfr_retire_cc'),
                       db.UniqueConstraint("category", "equipment_id",
@@ -36,7 +37,7 @@ class Component(db.Model):
                       )
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), nullable=True)
+    name = db.Column(db.String(64), nullable=False)
     category = db.Column(db.String(64), nullable=False)
     brand = db.Column(db.String(64), nullable=False)
     model = db.Column(db.String(128), nullable=False)

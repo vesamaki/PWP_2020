@@ -573,6 +573,15 @@ def test_component_columns(db_handle):
 
     # Not null category
     component = _get_component()
+    component.name = None
+    db_handle.session.add(component)
+    with pytest.raises(IntegrityError):
+        db_handle.session.commit()
+
+    db_handle.session.rollback()
+
+    # Not null category
+    component = _get_component()
     component.category = None
     db_handle.session.add(component)
     with pytest.raises(IntegrityError):
