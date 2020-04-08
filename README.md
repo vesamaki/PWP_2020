@@ -13,26 +13,63 @@ When POSTing data over API to backend, require client timezone info in request b
 
 When providing time data to a request, tell also the timezone (stored as UTC in database). Client can then convert as needed and deal with daylight saving time as well.
 
-***TODO:***
-    docstrings to all.
+### TODO: ###
+#####    docstrings to all. #####
 
+##### Create json schemas for Models. #####
+    Put to static folder. **check**  
+    Figure out format. **Will be a .py file** with content as in Ex3 schema function
+    Importing to app. **Import module as normal**
 
+##### What to put in __init__.py of resources -folder #####    
 
+##### Create resource routes for user.py, equipment.py and component.py #####
 
-#### Setting up environment ####
+##### Check functioning of Blueprints from Ex3 #####
 
-This project followed Oulu University's Programmable Web Project course's guides. A detailed guide on how to set up the environment can be found from [Lovelace](https://lovelace.oulu.fi/ohjelmoitava-web/programmable-web-project-spring-2020/pwp-setting-up-python-environment-for-exercises/).
+##### Check redirects for API documentation to Apiary #####
 
-Essentially, all the libraries and dependencies are listed in the requirements.txt. To set up your environment with these, run:  
-__pip install -r pwp_requirements.txt__
+##### Fix db_tests.py according to new project structure #####
+
+##### Do API implementation tests #####
+
+##### Test cloning, setup and running #####
+Revise instructions here
+
+### Setting up environment - REVISE THIS ###
+
+This project followed Oulu University's Programmable Web Project course's guides.  
+Essentially, these steps:
+<ul>
+<li>Create a folder for the project and a virtual environment folder within, i.e. venv</li>
+<li>Install virtualenv to manage all Python dependencies for the project</li>  
+On Windows: python.exe -m pip install virtualenv
+<li>Then create the virtual environment</li>  
+python.exe -m venv /path/to/new/virtual/environment
+<li>And activate the environment</li>  
+venv\Scripts\activate.bat
+</ul>
+
+A detailed guide on how to set up the environment can be found from [Lovelace](https://lovelace.oulu.fi/ohjelmoitava-web/programmable-web-project-spring-2020/pwp-setting-up-python-environment-for-exercises/).
+
+Clone the project to your project folder.  
+
+After this the project can be installed in editable mode so that you don't need to reinstall it whenever you make changes. You use pip to install it, and add the -e option. In the folder where the setup.py is, run:
+
+__pip install -e__
+
+OLD - Essentially, all the libraries and dependencies are listed in the requirements.txt. To set up your environment with these, run:  
+OLD - pip install -r pwp_requirements.txt__
 
 #### Running Flask ####  
 On Windows set the environment variable FLASK_APP to point to file API_flask_db.py -file. This can be done in command prompt, by browsing to folder containing the file and typing command:  
-set FLASK_APP=API_flask_db.py
+set FLASK_APP=cyequ  
+set FLASK_ENV=development / production  
+
+Setup the database:  
+flask init-db
 
 Then run flask with command:  
-flask run
-
-Initialize the database by running app_init.py.
+flask run  
 
 Database tests are included in db_tests.py. Using this sort of testing does not require data to exist in the database.

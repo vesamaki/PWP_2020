@@ -1,0 +1,2 @@
+graft src/cyequ/static
+global-exclude *.pyc
