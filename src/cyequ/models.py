@@ -1,11 +1,14 @@
+'''
+Docstring to models
+'''
+
+# Library imports
 import click
 from flask.cli import with_appcontext
-
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
-from datetime import datetime
 
-
+# Project imports
 from cyequ import db
 
 
@@ -14,7 +17,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
-    
+
 class Component(db.Model):
     # Check that date_retired is not before date_added.
     # Category and equipment_id form a unique entity.
@@ -157,7 +160,7 @@ class User(db.Model):
         return "[{}] {}".format(self.id, self.name)
 
 
-# Adapted from PWP "Flask API Project Layout" -material        
+# Adapted from PWP "Flask API Project Layout" -material
 @click.command("init-db")
 @with_appcontext
 def init_db_command():
@@ -165,5 +168,3 @@ def init_db_command():
     Creating custom command for Flask to initialize database
     '''
     db.create_all()
-
-    

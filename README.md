@@ -17,8 +17,8 @@ When providing time data to a request, tell also the timezone (stored as UTC in 
 #####    docstrings to all. #####
 
 ##### Create json schemas for Models. #####
-    Put to static folder. **check**  
-    Figure out format. **Will be a .py file** with content as in Ex3 schema function
+    Put to static folder. **Done**  
+    Figure out format. **Done. Will be a .py file** with content as in Ex3 schema function
     Importing to app. **Import module as normal**
 
 ##### What to put in __init__.py of resources -folder #####    

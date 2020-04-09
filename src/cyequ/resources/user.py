@@ -2,146 +2,161 @@
 Docstring to user resource routes
 '''
 
+# Library imports
+from flask import request, Response, json, ulr_for
+from flask_restful import Resource
+from sqlalchemy.exc import IntegrityError
+from jsonschema import validate, ValidationError
+
+# Project imports
+import cyequ.constants
+from cyequ.utils import MasonBuilder, UserBuilder, \
+                        EquipmentBuilder, ComponentBuilder, \
+                        create_error_response, check_for_json, \
+                        get_user_by_name, check_db_existance #, \
+                        #RideBuilder
+from cyequ.models import User, Equipment, Component #, Ride
+from cyequ.static.schemas.user_schema import user_schema
+from cyequ.static.schemas.equipment_schema import equipment_schema
+from cyequ.static.schemas.component_schema import component_schema
+#from cyequ.static.schemas.ride_schema import ride_schema
+
+
 class UserCollection(Resource):
+    '''
+    Class docstring here
+    '''
 
     def get(self):
-#        if request.method != "GET":
-#            return create_error_response(405, "Not found",
-#                "GET method required"
-#            )
+        '''
+        GET-method definition for UserCollection resource. - Untested
+        '''
+
         # Instantiate message body
-        body = InventoryBuilder(items=[])
+        body = UserBuilder(items=[])
         # Add general controls to message body
-        body.add_control("self", api.url_for(ProductCollection))
-        body.add_control_add_product()
-        # Loop through all products in database
-        for product in Product.query.all():
-            prod = InventoryBuilder(
-                handle=product.handle,
-                weight=product.weight,
-                price=product.price
+        body.add_namespace("cyequ", LINK_RELATIONS_URL)
+        body.add_control("self", url_for("api.usercollection"))
+        body.add_control_add_user()
+        # Loop through all users in database and build each item with data and
+        # controls.
+        for db_user in User.query.all():
+            usr = UserBuilder(
+                name=db_user.handle
             )
             # Add controls to each item
-            prod.add_control("self", api.url_for(ProductItem, handle=product.handle))
-            prod.add_control("profile", PRODUCT_PROFILE)
-            # Add to message body
-            body["items"].append(prod)
+            usr.add_control("self", url_for("api.useritem", user=db_user.name))
+            usr.add_control("profile", USER_PROFILE)
+            # Add each item to items-list of response body
+            body["items"].append(usr)
         return Response(json.dumps(body), 200, mimetype=MASON)
 
     def post(self):
+        '''
+        POST-method definition for UserCollection resource. - Untested
+        '''
 
-        if not request.json:
-            return create_error_response(415, "Unsupported media type",
-                                         "Requests must be JSON"
-                                         )
-        try:
-            validate(request.json, Product.get_schema())
-        except ValidationError as err:
-            return create_error_response(400, "Invalid JSON document", str(err))
-
-        product = Product(
-            handle=request.json["handle"],
-            weight=request.json["weight"],
-            price=request.json["price"]
+        # Check for json. If fails, respond with error 415
+        check_for_json(request.json)
+        # Validate request against the schema. If fails, respond with error 400
+        validate_request_to_schema(request.json, user_schema())
+        # Add user to db
+        user = User(
+            name=request.json["name"]
         )
         try:
-            db.session.add(product)
+            db.session.add(user)
             db.session.commit()
         except IntegrityError:
             # In case of database error
             db.session.rollback()
             return create_error_response(409,
                                          "Already exists",
-                                         "Product with handle '{}' already" \
-                                         " exists.".format(request.json["handle"])
+                                         "User with name '{}' already" \
+                                         " exists.".format(request.json["user"])
                                          )
+        # Respond with location of new resource
         return Response(status=201,
                         headers={"Location": \
-                                 api.url_for(ProductItem,
-                                             handle=request.json["handle"]
-                                             )
+                                 url_for("api.useritem", user=user.name)
                                  }
                         )
 
 
-class ProductItem(Resource):
+class UserItem(Resource):
+    '''
+    Class docstring here
+    '''
 
-    def get(self, handle):
-        # Check for request method
-#        if request.method != "GET":
-#            return create_error_response(405, "Not found",
-#                "GET method required"
-#            )
-        # Find product by handle in database. If not found, respond with error
-        db_prod = Product.query.filter_by(handle=handle).first()
-        if db_prod is None:
-            return create_error_response(404, "Not found",
-                                         "No product was found with the" \
-                                         " name {}".format(handle)
-                                         )
+    def get(self, user):
+        '''
+        GET-method definition for UserItem resource. - Untested
+        '''
+
+        # Find user by name in database. If not found, respond with error 404
+        db_user = check_db_existance(user,
+                                     User.query.filter_by(name=user).first()
+                                     )
         # Instantiate response message body
-        body = InventoryBuilder(
-            handle=db_prod.handle,
-            weight=db_prod.weight,
-            price=db_prod.price
+        body = UserBuilder(
+            handle=db_user.name
         )
-        # Add general controls to message body
-        body.add_control("self", api.url_for(ProductItem, handle=handle))
-        body.add_control("profile", PRODUCT_PROFILE)
-        body.add_control("collection", api.url_for(ProductCollection))
-        body.add_control_edit_product(handle)
-        body.add_control_delete_product(handle)
+        # Add controls to message body
+        body.add_namespace("cyequ", LINK_RELATIONS_URL)
+        body.add_control("self", url_for("api.useritem", user=user))
+        body.add_control("profile", USER_PROFILE)
+        body.add_control("collection", url_for("api.usercollection"))
+        body.add_control_edit_user(user)
+        body.add_control_all_equipment(user)
         return Response(json.dumps(body), 200, mimetype=MASON)
 
-    def put(self, handle):
-        # Check for json
-        if not request.json:
-            return create_error_response(415, "Unsupported media type",
-                                         "Requests must be JSON"
-                                         )
-        # Validate request against the schema
-        try:
-            validate(request.json, Product.get_schema())
-        except ValidationError as err:
-            return create_error_response(400, "Invalid JSON document", str(err))
-        # Find product by handle in database. If not found, respond with error
-        db_prod = Product.query.filter_by(handle=handle).first()
-        if db_prod is None:
-            return create_error_response(404, "Not found",
-                                         "No product was found with the given" \
-                                         " handle {}".format(handle)
-                                         )
-        # Update product data
-        db_prod.handle = request.json["handle"]
-        db_prod.weight = request.json["weight"]
-        db_prod.price = request.json["price"]
+    # Not implemented
+    def put(self, user):
+        '''
+        PUT-method definition for UserItem resource. - Untested
+
+        '''
+
+        # Check for json. If fails, respond with error 415
+        check_for_json(request.json)
+        # Validate request against the schema. If fails, respond with error 400
+        validate_request_to_schema(request.json, user_schema())
+        # Find user by name in database. If not found, respond with error 404
+        db_user = check_db_existance(user,
+                                     User.query.filter_by(name=user).first()
+                                     )
+        # Update user data
+        db_user.name = request.json["name"]
         try:
             db.session.commit()
         except IntegrityError:
             # In case of database error
             db.session.rollback()
             return create_error_response(409, "Already exists",
-                                         "Product with handle '{}' already " \
-                                         "exists.".format(request.json["handle"])
+                                         "User with name '{}' already " \
+                                         "exists.".format(request.json["name"])
                                          )
         return Response(status=204)
 
-    def delete(self, handle):
-        db_prod = Product.query.filter_by(handle=handle).first()
-        if db_prod is None:
-            return create_error_response(404, "Not found",
-                                         "No product was found with the " \
-                                         "name {}".format(handle)
-                                         )
-        try:
-            db.session.delete(db_prod)
-            db.session.commit()
-        except IntegrityError:
-            # In case of database error
-            db.session.rollback()
-            return create_error_response(500, "Internal Server Error",
-                                         "The server encountered an " \
-                                         "unexpected condition that prevented" \
-                                         " it from fulfilling the request."
-                                         )
-        return Response(status=204)
+#    def delete(self, user):
+#        '''
+#        DELETE-method definition for UserItem resource. - Untested
+#        Not Implemented
+#        '''
+#
+        # Find user by name in database. If not found, respond with error 404
+#        db_user = check_db_existance(user,
+#                                     User.query.filter_by(name=user).first()
+#                                     )
+#        try:
+#            db.session.delete(db_user)
+#            db.session.commit()
+#        except IntegrityError:
+#            # In case of database error
+#            db.session.rollback()
+#            return create_error_response(500, "Internal Server Error",
+#                                         "The server encountered an " \
+#                                         "unexpected condition that prevented" \
+#                                         " it from fulfilling the request."
+#                                         )
+#        return Response(status=204)

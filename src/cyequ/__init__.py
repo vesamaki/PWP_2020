@@ -17,7 +17,7 @@ db = SQLAlchemy()
 # Modified to use Flask SQLAlchemy
 def create_app(test_config=None):
     # Create Flask instance with name as set by FLASK_APP variable
-    app = Flask(__name__, instance_relative_config=True)
+    app = Flask(__name__, static_folder="static", instance_relative_config=True)
     # Configure the instance functionality
     app.config.from_mapping(
         SECRET_KEY="dev",   # Used by Flask and extensions to keep data safe
@@ -38,7 +38,7 @@ def create_app(test_config=None):
         pass
     # Callback used to initialize an application for the use with this database setup.
     db.init_app(app)
-    # Models defines the init-db command, but 
+    # Models defines the init-db command, but
     # import inside this function to prevent circular imports
     from . import models
     # Register the init-db command for the Flask instance

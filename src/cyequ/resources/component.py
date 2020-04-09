@@ -3,76 +3,15 @@ Docstring to component resource routes
 '''
 
 
+# Library imports
 from Flask import url_for
+from datetime import datetime
+
+# Project imports
 from cyequ.utils import MasonBuilder, CyequBuilder
-from cyequ import api
+from cyequ import api, models
 
-
-
-
-class ProductCollection(Resource):
-
-    def get(self):
-#        if request.method != "GET":
-#            return create_error_response(405, "Not found",
-#                "GET method required"
-#            )
-        # Instantiate message body
-        body = CyequBuilder(items=[])
-        # Add general controls to message body
-        body.add_control("self", url_for(ProductCollection))
-        body.add_control_add_product()
-        # Loop through all products in database
-        for product in Product.query.all():
-            prod = CyequBuilder(
-                handle=product.handle,
-                weight=product.weight,
-                price=product.price
-            )
-            # Add controls to each item
-            prod.add_control("self", url_for(ProductItem, handle=product.handle))
-            prod.add_control("profile", PRODUCT_PROFILE)
-            # Add to message body
-            body["items"].append(prod)
-        return Response(json.dumps(body), 200, mimetype=MASON)
-
-    def post(self):
-
-        if not request.json:
-            return create_error_response(415, "Unsupported media type",
-                                         "Requests must be JSON"
-                                         )
-        try:
-            validate(request.json, Product.get_schema())
-        except ValidationError as err:
-            return create_error_response(400, "Invalid JSON document", str(err))
-
-        product = Product(
-            handle=request.json["handle"],
-            weight=request.json["weight"],
-            price=request.json["price"]
-        )
-        try:
-            db.session.add(product)
-            db.session.commit()
-        except IntegrityError:
-            # In case of database error
-            db.session.rollback()
-            return create_error_response(409,
-                                         "Already exists",
-                                         "Product with handle '{}' already" \
-                                         " exists.".format(request.json["handle"])
-                                         )
-        return Response(status=201,
-                        headers={"Location": \
-                                 api.url_for(ProductItem,
-                                             handle=request.json["handle"]
-                                             )
-                                 }
-                        )
-
-
-class ProductItem(Resource):
+class ComponentItem(Resource):
 
     def get(self, handle):
         # Check for request method

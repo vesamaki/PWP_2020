@@ -2,9 +2,18 @@
 Docstring to utils
 '''
 
+# Library imports
+from flask import json, url_for
 
-from Flask import url_for
+# Project imports
 from cyequ import api
+from cyequ.resources.user import UserCollection, UserItem
+from cyequ.resources.equipment import EquipmentByUser, EquipmentItem
+from cyequ.resources.component import ComponentItem
+from cyequ.static.schemas.user_schema import user_schema
+from cyequ.static.schemas.equipment_schema import equipment_schema
+from cyequ.static.schemas.component_schema import component_schema
+#from cyequ.static.schemas.ride_schema import ride_schema
 
 
 class MasonBuilder(dict):
@@ -71,49 +80,149 @@ class MasonBuilder(dict):
         self["@controls"][ctrl_name] = kwargs
         self["@controls"][ctrl_name]["href"] = href
 
-class CyequBuilder(MasonBuilder):
+class UserBuilder(MasonBuilder):
 
     def add_control_all_users(self):
         self.add_control(
-            "storage:users-all",
+            "cyequ:users-all",
             href=url_for("api.usercollection"),
             method="GET",
             encoding="json",
-            title="Leads to the list of all products"
+            title="Get a list of all users known to the API."
         )
 
-    def add_control_delete_product(self, handle):
+    def add_control_add_user(self):
         self.add_control(
-            "storage:delete",
-            href=api.url_for(ProductItem, handle=handle),
-            method="DELETE",
-            title="Deletes this product"
-        )
-
-    def add_control_add_product(self):
-        self.add_control(
-            "storage:add-product",
-            href=api.url_for(ProductCollection),
+            "cyequ:add-user",
+            href=url_for("api.usercollection"),
             method="POST",
             encoding="json",
-            title="Creates a new product",
-            schema=Product.get_schema()
+            title="Adds a new user.",
+            schema=user_schema()
         )
 
-    def add_control_edit_product(self, handle):
+    def add_control_edit_user(self, user):
         self.add_control(
             "edit",
-            href=api.url_for(ProductItem, handle=handle),
+            href=url_for("api.useritem", name=user),
             method="PUT",
             encoding="json",
-            title="Edits a product",
-            schema=Product.get_schema()
+            title="Edits user's information",
+            schema=user_schema()
         )
 
 
+class EquipmentBuilder(MasonBuilder):
+
+    def add_control_all_equipment(self, user):
+        self.add_control(
+            "cyequ:equipment-owned",
+            href=url_for("api.equipmentbyuser", user=user),
+            method="GET",
+            encoding="json",
+            title="A list of all equipment owned by the given user's name."
+        )
+
+    def add_control_add_equipment(self, user):
+        self.add_control(
+            "cyequ:add-equipment",
+            href=url_for("api.equipmentbyuser", user=user),
+            method="POST",
+            encoding="json",
+            title="Adds a new equipment for the user.",
+            schema=equipment_schema()
+        )
+
+    def add_control_add_component(self, user, equipment):
+        self.add_control(
+            "cyequ:add-component",
+            href=url_for("api.equipmentitem", user=user, equipment=equipment),
+            method="POST",
+            encoding="json",
+            title="Adds a new component to the associated equipment.",
+            schema=equipment_schema()
+        )
+
+    def add_control_edit_equipment(self, user, equipment):
+        self.add_control(
+            "edit",
+            href=url_for("api.equipmentitem", name=user, equipment=equipment),
+            method="PUT",
+            encoding="json",
+            title="Edits equipment's information",
+            schema=equipment_schema()
+        )
+
+    def add_control_delete_equipment(self, user, equipment):
+        self.add_control(
+            "cyequ:delete",
+            href=url_for("api.equipmentitem", name=user, equipment=equipment),
+            method="DELETE",
+            title="Deletes this equipment"
+        )
+
+
+class ComponentBuilder(MasonBuilder):
+
+    def add_control_edit_component(self, user, equipment, component):
+        self.add_control(
+            "edit",
+            href=url_for("api.componentitem",
+                         name=user,
+                         equipment=equipment,
+                         component=component),
+            method="PUT",
+            encoding="json",
+            title="Edits component's information",
+            schema=component_schema()
+        )
+
+    def add_control_delete_component(self, user, equipment):
+        self.add_control(
+            "cyequ:delete",
+            href=url_for("api.componentitem",
+                         name=user,
+                         equipment=equipment,
+                         component=component),
+            method="DELETE",
+            title="Deletes component of the associated equipment."
+        )
+
 def create_error_response(status_code, title, message=None):
+    '''
+    Docstring here
+    '''
+
     resource_url = request.path
     body = MasonBuilder(resource_url=resource_url)
     body.add_error(title, message)
     body.add_control("profile", href=ERROR_PROFILE)
     return Response(json.dumps(body), status_code, mimetype=MASON)
+
+def check_for_json(request):
+    '''
+    Docstring here
+    '''
+
+    if not request:
+        return create_error_response(415, "Unsupported media type",
+                                     "Requests must be JSON"
+                                     )
+
+def validate_request_to_schema(request, schema):
+        try:
+            validate(request, schema)
+        except ValidationError as err:
+            return create_error_response(400, "Invalid JSON document", str(err))
+
+def check_db_existance(kwrd, db_object):
+    '''
+    Find keyword in database. If not found, respond with error
+    '''
+
+    if db_object is None:
+        return create_error_response(404, "Not found",
+                                     "No instance was found with the" \
+                                     " keyword {}".format(kwrd)
+                                     )
+    return db_object

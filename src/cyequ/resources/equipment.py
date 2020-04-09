@@ -2,95 +2,155 @@
 Docstring to equipment resource routes
 '''
 
-class ProductCollection(Resource):
+# Library imports
+from flask import request, Response, json, ulr_for
+from flask_restful import Resource
+from sqlalchemy.exc import IntegrityError
+from jsonschema import validate, ValidationError
+from datetime import datetime
 
-    def get(self):
-#        if request.method != "GET":
-#            return create_error_response(405, "Not found",
-#                "GET method required"
-#            )
+# Project imports
+import cyequ.constants
+from cyequ.utils import MasonBuilder, UserBuilder, \
+                        EquipmentBuilder, ComponentBuilder, \
+                        create_error_response, check_for_json, \
+                        get_user_by_name, check_db_existance #, \
+                        #RideBuilder
+from cyequ.models import User, Equipment, Component #, Ride
+from cyequ.static.schemas.user_schema import user_schema
+from cyequ.static.schemas.equipment_schema import equipment_schema
+from cyequ.static.schemas.component_schema import component_schema
+#from cyequ.static.schemas.ride_schema import ride_schema
+
+
+class EquipmentByUser(Resource):
+    '''
+    Class docstring here
+    '''
+
+    def get(self, user):
+        '''
+        GET-method definition for EquipmentByUser resource. - Untested
+        '''
+
+        # Find user by name in database. If not found, respond with error 404
+        db_user = check_db_existance(user,
+                                     User.query.filter_by(name=user).first()
+                                     )
         # Instantiate message body
-        body = InventoryBuilder(items=[])
+        body = EquipmentBuilder(items=[])
         # Add general controls to message body
-        body.add_control("self", api.url_for(ProductCollection))
-        body.add_control_add_product()
-        # Loop through all products in database
-        for product in Product.query.all():
-            prod = InventoryBuilder(
-                handle=product.handle,
-                weight=product.weight,
-                price=product.price
+        body.add_namespace("cyequ", LINK_RELATIONS_URL)
+        body.add_control("self", url_for("api.equipmentbyuser"))
+        body.add_control("cyequ-owner", url_for("api.useritem", user=user))
+        body.add_control_add_equipment(user)
+        # Loop through all equipment items owned by user
+        for equipment in db_user.hasEquip:
+            equip = EquipmentBuilder(
+                name=equipment.name,
+                category=equipment.category,
+                date_added=equipment.date_added,
+                date_retired=equipment.date_retired
             )
             # Add controls to each item
-            prod.add_control("self", api.url_for(ProductItem, handle=product.handle))
-            prod.add_control("profile", PRODUCT_PROFILE)
+            equip.add_control("self", url_for("api.equipmentitem",
+                                            user=user,
+                                            equipment=equipment.name)
+                                            )
+            equip.add_control("profile", EQUIPMENT_PROFILE)
             # Add to message body
-            body["items"].append(prod)
+            body["items"].append(equip)
         return Response(json.dumps(body), 200, mimetype=MASON)
 
-    def post(self):
-
-        if not request.json:
-            return create_error_response(415, "Unsupported media type",
-                                         "Requests must be JSON"
-                                         )
-        try:
-            validate(request.json, Product.get_schema())
-        except ValidationError as err:
-            return create_error_response(400, "Invalid JSON document", str(err))
-
-        product = Product(
-            handle=request.json["handle"],
-            weight=request.json["weight"],
-            price=request.json["price"]
+    def post(self, user):
+        '''
+        POST-method definition for EquipmentByUser resource. - Untested
+        '''
+        # Check for json. If fails, respond with error 415
+        check_for_json(request.json)
+        # Validate request against the schema. If fails, respond with error 400
+        validate_request_to_schema(request.json, equipment_schema())
+        # Find user by name in database. If not found, respond with error 404
+        db_user = check_db_existance(user,
+                                     User.query.filter_by(name=user).first()
+                                     )
+        # Add equipment to db
+        new_equip = Equipment(
+            name=request.json["name"],
+            category=request.json["category"],
+            brand=request.json["brand"],
+            model=request.json["model"],
+            date_added=request.json["date_added"],
+            date_retired=request.json["date_retired"],
+            owner=db_user.id
         )
         try:
-            db.session.add(product)
+            db.session.add(new_equip)
             db.session.commit()
         except IntegrityError:
             # In case of database error
             db.session.rollback()
             return create_error_response(409,
                                          "Already exists",
-                                         "Product with handle '{}' already" \
-                                         " exists.".format(request.json["handle"])
+                                         "Equipment with name '{}' already" \
+                                         " exists.".format(request.json["name"])
                                          )
+        # Respond with location of new resource
         return Response(status=201,
                         headers={"Location": \
-                                 api.url_for(ProductItem,
-                                             handle=request.json["handle"]
-                                             )
+                                 url_for(api.equipmentitem,
+                                         user=user,
+                                         equipment=request.json["name"]
+                                         )
                                  }
                         )
 
 
-class ProductItem(Resource):
+class EquipmentItem(Resource):
+    '''
+    Class docstring here
+    '''
 
-    def get(self, handle):
-        # Check for request method
-#        if request.method != "GET":
-#            return create_error_response(405, "Not found",
-#                "GET method required"
-#            )
-        # Find product by handle in database. If not found, respond with error
-        db_prod = Product.query.filter_by(handle=handle).first()
-        if db_prod is None:
-            return create_error_response(404, "Not found",
-                                         "No product was found with the" \
-                                         " name {}".format(handle)
-                                         )
+    def get(self, user, equipment):
+        '''
+        GET-method definition for EquipmentItem resource. - Untested
+        '''
+
+        # Find user by name in database. If not found, respond with error 404
+        db_user = check_db_existance(user,
+                                     User.query.filter_by(name=user).first()
+                                     )
+        # Find equipment by name in database.
+        # If not found, respond with error 404
+        db_equip = check_db_existance(equipment,
+                                     Equipment.query.filter_by(name=equipment).first()
+                                     )
         # Instantiate response message body
-        body = InventoryBuilder(
-            handle=db_prod.handle,
-            weight=db_prod.weight,
-            price=db_prod.price
+        # Add ITEMS HERE!
+        body = Equipment(
+            name=request.json["name"],
+            category=request.json["category"],
+            brand=request.json["brand"],
+            model=request.json["model"],
+            date_added=request.json["date_added"],
+            date_retired=request.json["date_retired"],
+            user=user
         )
-        # Add general controls to message body
-        body.add_control("self", api.url_for(ProductItem, handle=handle))
-        body.add_control("profile", PRODUCT_PROFILE)
-        body.add_control("collection", api.url_for(ProductCollection))
-        body.add_control_edit_product(handle)
-        body.add_control_delete_product(handle)
+        # Add controls response message body
+        body.add_namespace("cyequ", LINK_RELATIONS_URL)
+        body.add_control("self", url_for("api.equipmentitem",
+                                        user=user,
+                                        equipment=equipment)
+                                        )
+        body.add_control("profile", EQUIPMENT_PROFILE)
+        body.add_control("owner", url_for("equipmentbyuser", user=user))
+        body.add_control_all_users()
+        body.add_control_all_equipment(user)
+        body.add_control_edit_equipment(user, equipment)
+        body.add_control_delete_equipment(user, equipment)
+        body.add_control_add_component(user, equipment)
+
+
         return Response(json.dumps(body), 200, mimetype=MASON)
 
     def put(self, handle):

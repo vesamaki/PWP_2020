@@ -1,5 +1,5 @@
 '''
-This module defines the json schemas for Cycling Equipment Usage API
+This module defines the Component json schema for Cycling Equipment Usage API
 
 '''
 
@@ -20,7 +20,7 @@ Defines the user schema
         "maxLength": 64
     }
     return schema
-    
+
 def equipment_schema():
 '''
 Defines the equipment schema
@@ -64,8 +64,8 @@ Defines the equipment schema
         "type": "string",
         "pattern": "^[0-9]{4}-[01][0-9]-[0-3][0-9]\s[0-2][0-4]:[0-5][0-9]:[0-5][0-9]$"
     }
-    return schema    
-        
+    return schema
+
 def component_schema():
 '''
 Defines the component schema
@@ -110,7 +110,7 @@ Defines the component schema
         "pattern": "^[0-9]{4}-[01][0-9]-[0-3][0-9]\s[0-2][0-4]:[0-5][0-9]:[0-5][0-9]$"
     }
     return schema
-    
+
 def ride_schema():
 '''
 Defines the ride schema
@@ -136,5 +136,3 @@ Defines the ride schema
         "pattern": "^[0-9]{4}-[01][0-9]-[0-3][0-9]\s[0-2][0-4]:[0-5][0-9]:[0-5][0-9]$"
     }
     return schema
-    
-    
