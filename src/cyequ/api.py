@@ -14,7 +14,7 @@ api.ulr_for -> ulr_for:
 """
 
 # Library imports
-from flask import request, abort, json, Blueprint, ulr_for, #Flask 
+from flask import request, abort, json, Blueprint, ulr_for, redirect #Flask
 from sqlalchemy.exc import IntegrityError
 #from sqlalchemy.engine import Engine
 from werkzeug.exceptions import BadRequest
@@ -33,24 +33,24 @@ api = Api(api_bp)
 # this import must be placed after we create api to avoid issues with
 # circular imports
 from cyequ.resources.user import UserCollection, UserItem
-from cyequ.resources.equipment import UserCollection, UserItem
-from cyequ.resources.component import UserCollection, UserItem
+from cyequ.resources.equipment import EquipmentByUser, EquipmentItem
+from cyequ.resources.component import ComponentItem
 
 
 # Constants
 MASON = "application/vnd.mason+json"
-PRODUCT_PROFILE = "/profiles/product/"
-ERROR_PROFILE = "/profiles/error/"
-LINK_RELATIONS_URL = "/storage/link-relations/"
-APIARY_URL = "https://yourproject.docs.apiary.io/#reference/"
+USER_PROFILE = "/cyequ/profiles/user/"
+ERROR_PROFILE = "/cyequ/profiles/error/"
+LINK_RELATIONS_URL = "/cyequ/link-relations/"
+APIARY_URL = "https://cyclistequipmentusageapipwpcourse.docs.apiary.io/#reference/"
 
 
 # API Entry Point
 @api_bp.route("/")
 def entry_point():
-    body = InventoryBuilder()
-    body.add_namespace("storage", LINK_RELATIONS_URL)
-    body.add_control_all_products()
+    body = CyequBuilder()
+    body.add_namespace("cyequ", LINK_RELATIONS_URL)
+    body.add_control_all_users()
     return Response(json.dumps(body), 200, mimetype="MASON")
 
 @app.route(LINK_RELATIONS_URL)
@@ -65,5 +65,9 @@ def to_prod_profiles():
 def to_err_profiles():
     return Response(ERROR_PROFILE, 200, mimetype="text/html")
 
-api.add_resource(ProductCollection, "/api/products/")
-api.add_resource(ProductItem, "/api/products/<handle>/")
+# Registering resource routes - DONE
+api.add_resource(UserCollection, "/api/users/")
+api.add_resource(UserItem, "/api/users/<user>/")
+api.add_resource(EquipmentByUser, "/api/users/<user>/all_equipment/")
+api.add_resource(EquipmentItem, "/api/users/<user>//all_equipment/<equipment>/")
+api.add_resource(ComponentItem, "/api/users/<user>//all_equipment/<equipment>/<component>")

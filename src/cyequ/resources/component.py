@@ -2,6 +2,14 @@
 Docstring to component resource routes
 '''
 
+
+from Flask import url_for
+from cyequ.utils import MasonBuilder, CyequBuilder
+from cyequ import api
+
+
+
+
 class ProductCollection(Resource):
 
     def get(self):
@@ -10,19 +18,19 @@ class ProductCollection(Resource):
 #                "GET method required"
 #            )
         # Instantiate message body
-        body = InventoryBuilder(items=[])
+        body = CyequBuilder(items=[])
         # Add general controls to message body
-        body.add_control("self", api.url_for(ProductCollection))
+        body.add_control("self", url_for(ProductCollection))
         body.add_control_add_product()
         # Loop through all products in database
         for product in Product.query.all():
-            prod = InventoryBuilder(
+            prod = CyequBuilder(
                 handle=product.handle,
                 weight=product.weight,
                 price=product.price
             )
             # Add controls to each item
-            prod.add_control("self", api.url_for(ProductItem, handle=product.handle))
+            prod.add_control("self", url_for(ProductItem, handle=product.handle))
             prod.add_control("profile", PRODUCT_PROFILE)
             # Add to message body
             body["items"].append(prod)

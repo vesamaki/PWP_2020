@@ -2,7 +2,7 @@
 Docstring to user resource routes
 '''
 
-class ProductCollection(Resource):
+class UserCollection(Resource):
 
     def get(self):
 #        if request.method != "GET":
