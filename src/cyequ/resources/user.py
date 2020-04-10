@@ -3,23 +3,19 @@ Docstring to user resource routes
 '''
 
 # Library imports
-from flask import request, Response, json, ulr_for
+from flask import request, Response, json, url_for
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
-from jsonschema import validate, ValidationError
+# from werkzeug.exceptions import BadRequest
 
 # Project imports
-import cyequ.constants
-from cyequ.utils import MasonBuilder, UserBuilder, \
-                        EquipmentBuilder, ComponentBuilder, \
+from cyequ import db
+from cyequ.constants import MASON, USER_PROFILE, LINK_RELATIONS_URL
+from cyequ.utils import UserBuilder, \
                         create_error_response, check_for_json, \
-                        get_user_by_name, check_db_existance #, \
-                        #RideBuilder
-from cyequ.models import User, Equipment, Component #, Ride
+                        validate_request_to_schema, check_db_existance
+from cyequ.models import User
 from cyequ.static.schemas.user_schema import user_schema
-from cyequ.static.schemas.equipment_schema import equipment_schema
-from cyequ.static.schemas.component_schema import component_schema
-#from cyequ.static.schemas.ride_schema import ride_schema
 
 
 class UserCollection(Resource):
@@ -47,7 +43,7 @@ class UserCollection(Resource):
             # Add controls to each item
             usr.add_control("self", url_for("api.useritem", user=db_user.name))
             usr.add_control("profile", USER_PROFILE)
-            # Add each item to items-list of response body
+            # Append each item to items-list of response body
             body["items"].append(usr)
         return Response(json.dumps(body), 200, mimetype=MASON)
 
@@ -72,12 +68,13 @@ class UserCollection(Resource):
             db.session.rollback()
             return create_error_response(409,
                                          "Already exists",
-                                         "User with name '{}' already" \
-                                         " exists.".format(request.json["user"])
+                                         "User with name '{}' already"
+                                         " exists."
+                                         .format(request.json["user"])
                                          )
         # Respond with location of new resource
         return Response(status=201,
-                        headers={"Location": \
+                        headers={"Location":
                                  url_for("api.useritem", user=user.name)
                                  }
                         )
@@ -133,7 +130,7 @@ class UserItem(Resource):
             # In case of database error
             db.session.rollback()
             return create_error_response(409, "Already exists",
-                                         "User with name '{}' already " \
+                                         "User with name '{}' already "
                                          "exists.".format(request.json["name"])
                                          )
         return Response(status=204)
@@ -144,10 +141,11 @@ class UserItem(Resource):
 #        Not Implemented
 #        '''
 #
-        # Find user by name in database. If not found, respond with error 404
+#        # Find user by name in database. If not found, respond with error 404
 #        db_user = check_db_existance(user,
 #                                     User.query.filter_by(name=user).first()
 #                                     )
+#         # Delete user
 #        try:
 #            db.session.delete(db_user)
 #            db.session.commit()
@@ -155,8 +153,8 @@ class UserItem(Resource):
 #            # In case of database error
 #            db.session.rollback()
 #            return create_error_response(500, "Internal Server Error",
-#                                         "The server encountered an " \
-#                                         "unexpected condition that prevented" \
+#                                         "The server encountered an "
+#                                         "unexpected condition that prevented"
 #                                         " it from fulfilling the request."
 #                                         )
 #        return Response(status=204)

@@ -12,17 +12,22 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
+
 # Adapted from PWP "Flask API Project Layout" -material
-# Based on http://flask.pocoo.org/docs/1.0/tutorial/factory/#the-application-factory
+# Based on:
+# http://flask.pocoo.org/docs/1.0/tutorial/factory/#the-application-factory
 # Modified to use Flask SQLAlchemy
 def create_app(test_config=None):
     # Create Flask instance with name as set by FLASK_APP variable
-    app = Flask(__name__, static_folder="static", instance_relative_config=True)
+    app = Flask(__name__,
+                static_folder="static",
+                instance_relative_config=True)
     # Configure the instance functionality
     app.config.from_mapping(
         SECRET_KEY="dev",   # Used by Flask and extensions to keep data safe
         # Path to database file
-        SQLALCHEMY_DATABASE_URI="sqlite:///" + os.path.join(app.instance_path, "development.db"),
+        SQLALCHEMY_DATABASE_URI="sqlite:///" + os.path.join(app.instance_path,
+                                                            "development.db"),
         SQLALCHEMY_TRACK_MODIFICATIONS=False
     )
     # Optionally set Flask instance config from test_config or from file.
@@ -36,7 +41,8 @@ def create_app(test_config=None):
         os.makedirs(app.instance_path)
     except OSError:
         pass
-    # Callback used to initialize an application for the use with this database setup.
+    # Callback used to initialize an application
+    # for the use with this database setup.
     db.init_app(app)
     # Models defines the init-db command, but
     # import inside this function to prevent circular imports
@@ -49,5 +55,5 @@ def create_app(test_config=None):
     from . import api
     # Register the blueprint "api_bp" for Flask instance
     app.register_blueprint(api.api_bp)
-    print(app.instance_path) # Just to see where instance data is stored
+    print(app.instance_path)  # Just to see where instance data is stored
     return app

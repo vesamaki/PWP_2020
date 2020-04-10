@@ -14,11 +14,20 @@ from cyequ import db
 
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
+    '''
+    Docstring to here, check Ex1
+    '''
+
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
 
+
 class Component(db.Model):
+    '''
+    Class docstring here
+    '''
+
     # Check that date_retired is not before date_added.
     # Category and equipment_id form a unique entity.
     __table_args__ = (db.CheckConstraint('date_retired > date_added',
@@ -42,7 +51,12 @@ class Component(db.Model):
 
     installedTo = db.relationship("Equipment", back_populates="hasCompos")
     # Adapted from PWP Ex2
+
     def __repr__(self):
+        '''
+        Docstring to here, check Ex2 beginning
+        '''
+
         return "[{}] {} brand {} and model {}" \
             " added on {} and retired on {}," \
             " part of equip {}".format(self.id,
@@ -54,7 +68,12 @@ class Component(db.Model):
                                        self.equipment_id
                                        )
 
+
 class Ride(db.Model):
+    '''
+    Class docstring here
+    '''
+
     # Check that 0 duration rides are not accepted.
     __table_args__ = (db.CheckConstraint('duration > 0',
                                          name='_no_zero_duration_cc'),
@@ -83,7 +102,12 @@ class Ride(db.Model):
                                  )
     riddenBy = db.relationship("User", back_populates="rode")
     # Adapted from PWP Ex2
+
     def __repr__(self):
+        '''
+        Docstring to here, check Ex2 beginning
+        '''
+
         return "[{}] {} duration {}" \
             " ridden on {} with {} by {}".format(self.id,
                                                  self.name,
@@ -93,7 +117,12 @@ class Ride(db.Model):
                                                  self.rider
                                                  )
 
+
 class Equipment(db.Model):
+    '''
+    Class docstring here
+    '''
+
     # Check that date_retired is not before date_added.
     __table_args__ = (db.CheckConstraint('date_retired > date_added',
                                          name='_e_add_bfr_retire_cc'),
@@ -128,7 +157,12 @@ class Equipment(db.Model):
                              order_by=(Ride.datetime, Ride.name)
                              )
     # Adapted from PWP Ex2
+
     def __repr__(self):
+        '''
+        Docstring to here, check Ex2 beginning
+        '''
+
         return "[{}] {}, brand {} and model {}" \
             " added on {} and retired on {}," \
             " owned by {}".format(self.id,
@@ -140,7 +174,12 @@ class Equipment(db.Model):
                                   self.owner
                                   )
 
+
 class User(db.Model):
+    '''
+    Class docstring here
+    '''
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False, unique=True)
 
@@ -156,7 +195,12 @@ class User(db.Model):
                            order_by=(Ride.datetime, Ride.name)
                            )
     # Adapted from PWP Ex2
+
     def __repr__(self):
+        '''
+        Docstring to here, check Ex2 beginning
+        '''
+
         return "[{}] {}".format(self.id, self.name)
 
 
