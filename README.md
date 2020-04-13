@@ -23,12 +23,6 @@ When providing time data to a request, tell also the timezone (stored as UTC in 
 
 ##### What to put in __init__.py of resources -folder #####    
 
-##### Create resource routes for user.py, equipment.py and component.py #####
-
-##### Check functioning of Blueprints from Ex3 #####
-
-##### Check redirects for API documentation to Apiary #####
-
 ##### Fix db_tests.py according to new project structure #####
 
 ##### Do API implementation tests #####
@@ -56,7 +50,7 @@ Clone the project to your project folder.
 
 After this the project can be installed in editable mode so that you don't need to reinstall it whenever you make changes. You use pip to install it, and add the -e option. In the folder where the setup.py is, run:
 
-__pip install -e__
+__pip install -e .__
 
 OLD - Essentially, all the libraries and dependencies are listed in the requirements.txt. To set up your environment with these, run:  
 OLD - pip install -r pwp_requirements.txt__

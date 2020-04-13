@@ -37,7 +37,7 @@ from cyequ.resources.component import ComponentItem  # noqa:E402
 
 
 # API Entry Point - Untested
-@api_bp.route("/")
+@api_bp.route("/", methods=['GET'])
 def entry_point():
     body = MasonBuilder()
     body.add_namespace("cyequ", LINK_RELATIONS_URL)
@@ -46,27 +46,27 @@ def entry_point():
 
 # Adapted from PWP Ex3
 # Static route: Link relations - Untested
-@api.route(LINK_RELATIONS_URL)
+@api_bp.route(LINK_RELATIONS_URL, methods=['GET'])
 def redirect_to_apiary_link_rels():
     return redirect(APIARY_URL + "link-relations")
 
 # Static route: User Profile - Untested
-@api.route(USER_PROFILE)
+@api_bp.route(USER_PROFILE, methods=['GET'])
 def redirect_to_apiary_user_prof():
     return redirect(APIARY_URL + "user-profile")
 
 # Static route: Equipment Profile - Untested
-@api.route(EQUIPMENT_PROFILE)
+@api_bp.route(EQUIPMENT_PROFILE, methods=['GET'])
 def redirect_to_apiary_equip_prof():
     return redirect(APIARY_URL + "equipment-profile")
 
 # Static route: Component Profile - Untested
-@api.route(COMPONENT_PROFILE)
+@api_bp.route(COMPONENT_PROFILE, methods=['GET'])
 def redirect_to_apiary_comp_prof():
     return redirect(APIARY_URL + "component-profile")
 
 # Static route: Error Profile - Untested
-@api.route(ERROR_PROFILE)
+@api_bp.route(ERROR_PROFILE, methods=['GET'])
 def redirect_to_apiary_err_prof():
     return redirect(APIARY_URL + "error-profile")
 

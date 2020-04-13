@@ -13,6 +13,8 @@ setup(
       install_requires=["flask",
                         "flask-restful",
                         "flask-sqlalchemy",
-                        "SQLAlchemy"
+                        "SQLAlchemy",
+                        "click",
+                        "jsonschema"
                         ]
       )

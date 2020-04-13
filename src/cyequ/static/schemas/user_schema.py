@@ -5,9 +5,10 @@ This module defines the User json schema of Cycling Equipment Usage API
 
 
 def user_schema():
-'''
-Defines the user schema
-'''
+    '''
+    Defines the user schema
+    '''
+
     schema = {
         "type": "object",
         "required": ["name"]

@@ -29,10 +29,10 @@ class Component(db.Model):
     '''
 
     # Check that date_retired is not before date_added.
-    # Category and equipment_id form a unique entity.
+    # Category and date_retired form a unique entity.
     __table_args__ = (db.CheckConstraint('date_retired > date_added',
                                          name='_c_add_bfr_retire_cc'),
-                      db.UniqueConstraint("category", "equipment_id",
+                      db.UniqueConstraint("category", "date_retired",
                                           name="_compo_in_equip_uc")
                       )
 

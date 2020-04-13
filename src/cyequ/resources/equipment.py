@@ -70,13 +70,29 @@ class EquipmentByUser(Resource):
         db_user = check_db_existance(user,
                                      User.query.filter_by(name=user).first()
                                      )
+        # Check if date_retired given
+        if request.json.get("date_retired", None) is not None:
+            # Check if date_retired is later than date_added
+            if request.json["date_added"] >= request.json["date_retired"]:
+                return create_error_response(409, "Inconsistent dates",
+                                             "Retire date {} must be in the "
+                                             "future with respect to"
+                                             " added date {}"
+                                             .format(request
+                                                     .json["date_retired"],
+                                                     request
+                                                     .json["date_added"])
+                                             )
         # Add equipment to db
         new_equip = Equipment(name=request.json["name"],
                               category=request.json["category"],
                               brand=request.json["brand"],
                               model=request.json["model"],
                               date_added=request.json["date_added"],
-                              date_retired=request.json["date_retired"],
+                              # Will look for date_retired and set as None,
+                              # if not found
+                              date_retired=request.json
+                                           .get("date_retired", None),
                               owner=db_user.id
                               )
         try:
@@ -186,13 +202,35 @@ class EquipmentItem(Resource):
                                       Equipment.query
                                       .filter_by(name=equipment).first()
                                       )
+        # Check if equipment is already retired
+        if db_equip.date_retired is not None:
+            return create_error_response(409,
+                                         "Already retired",
+                                         "Equipment of name '{}' is retired."
+                                         " Cannot add component."
+                                         .format(request.json["category"])
+                                         )
+        # Check if date_retired given
+        if request.json.get("date_retired", None) is not None:
+            # Check if date_retired is later than date_added
+            if request.json["date_added"] >= request.json["date_retired"]:
+                return create_error_response(409, "Inconsistent dates",
+                                             "Retire date {} must be in the "
+                                             "future with respect to"
+                                             " added date {}"
+                                             .format(request
+                                                     .json["date_retired"],
+                                                     request
+                                                     .json["date_added"])
+                                             )
         # Add a new component to db for equipment
         new_comp = Component(name=request.json["name"],
                              category=request.json["category"],
                              brand=request.json["brand"],
                              model=request.json["model"],
                              date_added=request.json["date_added"],
-                             date_retired=request.json["date_retired"],
+                             date_retired=request.json
+                                          .get("date_retired", None),
                              equipment_id=db_equip.id
                              )
         try:
@@ -202,9 +240,9 @@ class EquipmentItem(Resource):
             # In case of database error
             db.session.rollback()
             return create_error_response(409,
-                                         "Already exists",
-                                         "Component of category '{}' already"
-                                         " exists."
+                                         "Already in service",
+                                         "Unretired component of category"
+                                         " '{}' already exists."
                                          .format(request.json["category"])
                                          )
         # Respond with location of new resource
@@ -243,22 +281,25 @@ class EquipmentItem(Resource):
         db_equip.brand = request.json["brand"]
         db_equip.model = request.json["model"]
         db_equip.date_added = request.json["date_added"]
-
-# EXAMPLE way of handling optional fields in request json data:
-#        product = Product(handle=request.json["handle"],
-#                          weight=request.json["weight"],
-#                          price=request.json["price"]
-#                          )
-#        try:
-#            product.test=request.json["test"]
-#        except KeyError:
-#            print("KeyError raised from omission of optional test item in request") # noqa: E501
-
         # When retiring equipment, also retire associated components
-        # if request.json["date_retired"] is not {}:  # GOTTA TEST THIS, maybe None # noqa: E501
-        #    db_equip.date_retired = request.json["date_retired"]
-        # ADD HERE LOGIC TO UPDATE ASSOCIATED COMPONENTS date_retired
-        # For loop all associated components
+        # Check if date_retired given for equipment
+        if request.json.get("date_retired", None) is not None:
+            # Check if date_retired is later than date_added
+            if db_equip.date_added >= request.json["date_retired"]:
+                return create_error_response(409, "Inconsistent dates",
+                                             "Retire date {} must be in the "
+                                             "future with respect to"
+                                             " added date {}"
+                                             .format(request
+                                                     .json["date_retired"],
+                                                     db_equip.date_added)
+                                             )
+            # Update equipment date_retired
+            db_equip.date_retired = request.json["date_retired"]
+            # Loop all associated components for equipment
+            for component in Component.query.filter_by(equipment_id=db_equip.id).all():  # noqa: 501
+                # Update component date_retired
+                component.date_retired = request.json["date_retired"]
         try:
             db.session.commit()
         except IntegrityError:

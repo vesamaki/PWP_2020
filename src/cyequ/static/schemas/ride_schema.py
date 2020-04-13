@@ -5,9 +5,10 @@ This module defines the Ride json schema for Cycling Equipment Usage API
 
 
 def ride_schema():
-'''
-Defines the ride schema
-'''
+    '''
+    Defines the ride schema
+    '''
+
     schema = {
         "type": "object",
         "required": ["name", "duration", "datetime"]
@@ -27,6 +28,6 @@ Defines the ride schema
     props["datetime"] = {
         "description": "Date and time the ride started",
         "type": "string",
-        "pattern": "^[0-9]{4}-[01][0-9]-[0-3][0-9]\s[0-2][0-4]:[0-5][0-9]:[0-5][0-9]$"
+        "pattern": "^[0-9]{4}-[01][0-9]-[0-3][0-9]\s[0-2][0-4]:[0-5][0-9]:[0-5][0-9]$"   # noqa: E501
     }
     return schema

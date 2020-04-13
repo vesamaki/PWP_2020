@@ -87,9 +87,10 @@ class ComponentItem(Resource):
                            )
         # Find equipment by name in database.
         # If not found, respond with error 404
-        check_db_existance(equipment,
-                           Equipment.query.filter_by(name=equipment).first()
-                           )
+        db_equip = check_db_existance(equipment,
+                                      Equipment.query
+                                      .filter_by(name=equipment).first()
+                                      )
         # Find component by category in database.
         # If not found, respond with error 404
         db_comp = check_db_existance(component,
@@ -102,7 +103,24 @@ class ComponentItem(Resource):
         db_comp.brand = request.json["brand"]
         db_comp.model = request.json["model"]
         db_comp.date_added = request.json["date_added"]
-        db_comp.date_retired = request.json["date_retired"]
+        # Check if date_retired given
+        if request.json.get("date_retired", None) is not None:
+            # Check if date_retired is later than date_added
+            if request.json["date_added"] >= request.json["date_retired"]:
+                return create_error_response(409, "Inconsistent dates",
+                                             "Retire date {} must be in the "
+                                             "future with respect to"
+                                             " added date {}"
+                                             .format(request
+                                                     .json["date_retired"],
+                                                     request
+                                                     .json["date_added"])
+                                             )
+            # Check if equipment is already retired
+            # Components are retired, when equipment is retired
+            # Cannot re- or unretire components of retired equipment
+            if db_equip.date_retired is None:
+                db_comp.date_retired = request.json["date_retired"]
         try:
             db.session.commit()
         except IntegrityError:
@@ -132,8 +150,8 @@ class ComponentItem(Resource):
         # Find component by category in database.
         # If not found, respond with error 404
         db_comp = check_db_existance(component,
-                                     Component.query.
-                                     filter_by(category=component).first()
+                                     Component.query
+                                     .filter_by(category=component).first()
                                      )
         # Delete equipment
         try:

@@ -5,10 +5,13 @@ This module initializes the Flask instance of
 See https://github.com/vesamaki/PWP_2020 for details
 """
 
+# Library imports
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
+# Project imports
+# --
 
 db = SQLAlchemy()
 
@@ -46,14 +49,14 @@ def create_app(test_config=None):
     db.init_app(app)
     # Models defines the init-db command, but
     # import inside this function to prevent circular imports
-    from . import models
+    from cyequ import models
     # Register the init-db command for the Flask instance
     # Use as "flask init-db" in CMD
     app.cli.add_command(models.init_db_command)
     # API blueprint defined in api, but
     # import inside this function to prevent circular imports
-    from . import api
+    from cyequ import api
     # Register the blueprint "api_bp" for Flask instance
     app.register_blueprint(api.api_bp)
-    print(app.instance_path)  # Just to see where instance data is stored
+    # print(app.instance_path)  # Just to see where instance data is stored
     return app
