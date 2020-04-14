@@ -6,15 +6,15 @@ Docstring to component resource routes
 from flask import request, Response, json, url_for
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
+from jsonschema import validate, ValidationError
 
 # Project imports
 from cyequ import db
 from cyequ.constants import MASON, COMPONENT_PROFILE, LINK_RELATIONS_URL
-from cyequ.utils import ComponentBuilder, \
-                        create_error_response, check_for_json, \
-                        validate_request_to_schema, check_db_existance
+from cyequ.utils import ComponentBuilder, create_error_response, \
+                        convert_req_date
 from cyequ.models import User, Equipment, Component  # , Ride
-from cyequ.static.schemas.equipment_schema import equipment_schema
+from cyequ.static.schemas.component_schema import component_schema
 # from cyequ.static.schemas.ride_schema import ride_schema
 
 
@@ -29,21 +29,28 @@ class ComponentItem(Resource):
         '''
 
         # Find user by name in database. If not found, respond with error 404
-        check_db_existance(user,
-                           User.query.filter_by(name=user).first()
-                           )
+        if User.query.filter_by(name=user).first() is None:
+            return create_error_response(404, "Not found",
+                                         "No user was found with name {}"
+                                         .format(user)
+                                         )
         # Find equipment by name in database.
         # If not found, respond with error 404
-        db_equip = check_db_existance(equipment,
-                                      Equipment.query
-                                      .filter_by(name=equipment).first()
-                                      )
+        db_equip = Equipment.query.filter_by(name=equipment).first()
+        if db_equip is None:
+            return create_error_response(404, "Not found",
+                                         "No equipment was found with name {}"
+                                         .format(equipment)
+                                         )
         # Find component by category in database.
         # If not found, respond with error 404
-        db_comp = check_db_existance(component,
-                                     Component.query
-                                     .filter_by(category=component).first()
-                                     )
+        db_comp = Component.query.filter_by(category=component).first()
+        if db_comp is None:
+            return create_error_response(404, "Not found",
+                                         "No component was found with "
+                                         "category {}"
+                                         .format(component)
+                                         )
         # Instantiate response message body and include component data
         body = ComponentBuilder(name=db_comp.name,
                                 category=db_comp.category,
@@ -78,31 +85,47 @@ class ComponentItem(Resource):
         '''
 
         # Check for json. If fails, respond with error 415
-        check_for_json(request.json)
+        if not request.json:
+            return create_error_response(415, "Unsupported media type",
+                                         "Requests must be JSON"
+                                         )
         # Validate request against the schema. If fails, respond with error 400
-        validate_request_to_schema(request.json, equipment_schema())
+        try:
+            validate(request.json, component_schema())
+        except ValidationError as err:
+            return create_error_response(400, "Invalid JSON "
+                                         "document", str(err))
         # Find user by name in database. If not found, respond with error 404
-        check_db_existance(user,
-                           User.query.filter_by(name=user).first()
-                           )
+        if User.query.filter_by(name=user).first() is None:
+            return create_error_response(404, "Not found",
+                                         "No user was found with name {}"
+                                         .format(user)
+                                         )
         # Find equipment by name in database.
         # If not found, respond with error 404
-        db_equip = check_db_existance(equipment,
-                                      Equipment.query
-                                      .filter_by(name=equipment).first()
-                                      )
+        db_equip = Equipment.query.filter_by(name=equipment).first()
+        if db_equip is None:
+            return create_error_response(404, "Not found",
+                                         "No equipment was found with name {}"
+                                         .format(equipment)
+                                         )
         # Find component by category in database.
         # If not found, respond with error 404
-        db_comp = check_db_existance(component,
-                                     Component.query
-                                     .filter_by(category=component).first()
-                                     )
+        db_comp = Component.query.filter_by(category=component).first()
+        if db_comp is None:
+            return create_error_response(404, "Not found",
+                                         "No component was found with "
+                                         "category {}"
+                                         .format(component)
+                                         )
+        # Convert %Y-%m-%d %H:%M:%S dates to Python datetime format
+        p_date_added = convert_req_date(request.json.get("date_added"))
         # Update equipment data
         db_comp.name = request.json["name"]
         db_comp.category = request.json["category"]
         db_comp.brand = request.json["brand"]
         db_comp.model = request.json["model"]
-        db_comp.date_added = request.json["date_added"]
+        db_comp.date_added = p_date_added
         # Check if date_retired given
         if request.json.get("date_retired", None) is not None:
             # Check if date_retired is later than date_added
@@ -120,7 +143,9 @@ class ComponentItem(Resource):
             # Components are retired, when equipment is retired
             # Cannot re- or unretire components of retired equipment
             if db_equip.date_retired is None:
-                db_comp.date_retired = request.json["date_retired"]
+                p_date_retired = convert_req_date(request.json
+                                                  .get("date_retired"))
+                db_comp.date_retired = p_date_retired
         try:
             db.session.commit()
         except IntegrityError:
@@ -139,20 +164,27 @@ class ComponentItem(Resource):
         '''
 
         # Find user by name in database. If not found, respond with error 404
-        check_db_existance(user,
-                           User.query.filter_by(name=user).first()
-                           )
+        if User.query.filter_by(name=user).first() is None:
+            return create_error_response(404, "Not found",
+                                         "No user was found with name {}"
+                                         .format(user)
+                                         )
         # Find equipment by name in database.
         # If not found, respond with error 404
-        check_db_existance(equipment,
-                           Equipment.query.filter_by(name=equipment).first()
-                           )
+        if Equipment.query.filter_by(name=equipment).first() is None:
+            return create_error_response(404, "Not found",
+                                         "No equipment was found with name {}"
+                                         .format(equipment)
+                                         )
         # Find component by category in database.
         # If not found, respond with error 404
-        db_comp = check_db_existance(component,
-                                     Component.query
-                                     .filter_by(category=component).first()
-                                     )
+        db_comp = Component.query.filter_by(category=component).first()
+        if db_comp is None:
+            return create_error_response(404, "Not found",
+                                         "No component was found with "
+                                         "category {}"
+                                         .format(component)
+                                         )
         # Delete equipment
         try:
             db.session.delete(db_comp)

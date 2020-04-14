@@ -4,7 +4,7 @@ Docstring to utils
 
 # Library imports
 from flask import json, url_for, request, Response
-from jsonschema import validate, ValidationError
+from datetime import datetime
 
 # Project imports
 from cyequ.constants import MASON, ERROR_PROFILE
@@ -246,6 +246,7 @@ def create_error_response(status_code, title, message=None):
     Docstring here
     '''
 
+    # print("Throwing error response: {} {} ".format(status_code, title))
     resource_url = request.path
     body = MasonBuilder(resource_url=resource_url)
     body.add_error(title, message)
@@ -253,36 +254,8 @@ def create_error_response(status_code, title, message=None):
     return Response(json.dumps(body), status_code, mimetype=MASON)
 
 
-def check_for_json(request):
-    '''
-    Docstring here
-    '''
-
-    if not request:
-        return create_error_response(415, "Unsupported media type",
-                                     "Requests must be JSON"
-                                     )
-
-
-def validate_request_to_schema(request, schema):
-    '''
-    Docstring here
-    '''
-    try:
-        validate(request, schema)
-    except ValidationError as err:
-        return create_error_response(400, "Invalid JSON "
-                                     "document", str(err))
-
-
-def check_db_existance(kwrd, db_object):
-    '''
-    Find keyword in database. If not found, respond with error
-    '''
-
-    if db_object is None:
-        return create_error_response(404, "Not found",
-                                     "No instance was found with the"
-                                     " keyword {}".format(kwrd)
-                                     )
-    return db_object
+def convert_req_date(request_date):
+    if request_date:
+        return datetime.strptime(request_date, "%Y-%m-%d %H:%M:%S")
+    else:
+        return None

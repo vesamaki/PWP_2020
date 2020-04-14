@@ -31,10 +31,13 @@ class Component(db.Model):
     # Check that date_retired is not before date_added.
     # Category and date_retired form a unique entity.
     __table_args__ = (db.CheckConstraint('date_retired > date_added',
-                                         name='_c_add_bfr_retire_cc'),
-                      db.UniqueConstraint("category", "date_retired",
-                                          name="_compo_in_equip_uc")
-                      )
+                                         name='_c_add_bfr_retire_cc'), )
+    # Following won't work, because
+    # SQLite treats all NULL values as different, therefore,
+    # a column with a UNIQUE constraint can have
+    # multiple NULL values.
+    # db.UniqueConstraint("category", "date_retired",
+    #                     name="_compo_in_equip_uc"),
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False)

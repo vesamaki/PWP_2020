@@ -6,14 +6,13 @@ Docstring to user resource routes
 from flask import request, Response, json, url_for
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
+from jsonschema import validate, ValidationError
 # from werkzeug.exceptions import BadRequest
 
 # Project imports
 from cyequ import db
 from cyequ.constants import MASON, USER_PROFILE, LINK_RELATIONS_URL
-from cyequ.utils import UserBuilder, \
-                        create_error_response, check_for_json, \
-                        validate_request_to_schema, check_db_existance
+from cyequ.utils import UserBuilder, create_error_response
 from cyequ.models import User
 from cyequ.static.schemas.user_schema import user_schema
 
@@ -52,10 +51,17 @@ class UserCollection(Resource):
         POST-method definition for UserCollection resource. - Untested
         '''
 
-        # Check for json. If fails, respond with error 415
-        check_for_json(request.json)
+        # Check for json.
+        if not request.json:
+            return create_error_response(415, "Unsupported media type",
+                                         "Requests must be JSON"
+                                         )
         # Validate request against the schema. If fails, respond with error 400
-        validate_request_to_schema(request.json, user_schema())
+        try:
+            validate(request.json, user_schema())
+        except ValidationError as err:
+            return create_error_response(400, "Invalid JSON "
+                                         "document", str(err))
         # Add user to db
         user = User(
             name=request.json["name"]
@@ -70,7 +76,7 @@ class UserCollection(Resource):
                                          "Already exists",
                                          "User with name '{}' already"
                                          " exists."
-                                         .format(request.json["user"])
+                                         .format(request.json["name"])
                                          )
         # Respond with location of new resource
         return Response(status=201,
@@ -91,12 +97,15 @@ class UserItem(Resource):
         '''
 
         # Find user by name in database. If not found, respond with error 404
-        db_user = check_db_existance(user,
-                                     User.query.filter_by(name=user).first()
-                                     )
+        db_user = User.query.filter_by(name=user).first()
+        if db_user is None:
+            return create_error_response(404, "Not found",
+                                         "No user was found with name {}"
+                                         .format(user)
+                                         )
         # Instantiate response message body
         body = UserBuilder(
-            user=db_user.name
+            # name=db_user.name
         )
         # Add controls to message body
         body.add_namespace("cyequ", LINK_RELATIONS_URL)
@@ -115,13 +124,23 @@ class UserItem(Resource):
         '''
 
         # Check for json. If fails, respond with error 415
-        check_for_json(request.json)
+        if not request.json:
+            return create_error_response(415, "Unsupported media type",
+                                         "Requests must be JSON"
+                                         )
         # Validate request against the schema. If fails, respond with error 400
-        validate_request_to_schema(request.json, user_schema())
+        try:
+            validate(request.json, user_schema())
+        except ValidationError as err:
+            return create_error_response(400, "Invalid JSON "
+                                         "document", str(err))
         # Find user by name in database. If not found, respond with error 404
-        db_user = check_db_existance(user,
-                                     User.query.filter_by(name=user).first()
-                                     )
+        db_user = User.query.filter_by(name=user).first()
+        if db_user is None:
+            return create_error_response(404, "Not found",
+                                         "No user was found with name {}"
+                                         .format(user)
+                                         )
         # Update user data
         db_user.name = request.json["name"]
         try:
@@ -142,9 +161,12 @@ class UserItem(Resource):
 #        '''
 #
 #        # Find user by name in database. If not found, respond with error 404
-#        db_user = check_db_existance(user,
-#                                     User.query.filter_by(name=user).first()
-#                                     )
+#        db_user = User.query.filter_by(name=user).first()
+#        if db_user is None:
+#            return create_error_response(404, "Not found",
+#                                         "No user was found with name {}"
+#                                         .format(user)
+#                                         )
 #         # Delete user
 #        try:
 #            db.session.delete(db_user)

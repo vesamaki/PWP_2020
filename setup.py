@@ -15,6 +15,7 @@ setup(
                         "flask-sqlalchemy",
                         "SQLAlchemy",
                         "click",
-                        "jsonschema"
+                        "jsonschema",
+                        "requests"
                         ]
       )

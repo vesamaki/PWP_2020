@@ -21,5 +21,4 @@ class EntryURL(Resource):
         body = UserBuilder()
         body.add_namespace("cyequ", LINK_RELATIONS_URL)
         body.add_control_all_users()
-        print(json.dumps(body))
         return Response(json.dumps(body), 200, mimetype=MASON)
