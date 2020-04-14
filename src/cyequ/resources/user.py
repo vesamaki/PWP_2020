@@ -38,7 +38,7 @@ class UserCollection(Resource):
         # controls.
         for db_user in User.query.all():
             usr = UserBuilder(
-                name=db_user.handle
+                name=db_user.name
             )
             # Add controls to each item
             usr.add_control("self", url_for("api.useritem", user=db_user.name))
@@ -96,7 +96,7 @@ class UserItem(Resource):
                                      )
         # Instantiate response message body
         body = UserBuilder(
-            handle=db_user.name
+            user=db_user.name
         )
         # Add controls to message body
         body.add_namespace("cyequ", LINK_RELATIONS_URL)

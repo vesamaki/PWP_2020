@@ -79,7 +79,7 @@ class MasonBuilder(dict):
         self["@controls"][ctrl_name]["href"] = href
 
 
-class UserBuilder(MasonBuilder):
+class CommonBuilder(MasonBuilder):
     '''
     Class docstring here
     '''
@@ -96,6 +96,25 @@ class UserBuilder(MasonBuilder):
             encoding="json",
             title="Get a list of all users known to the API."
         )
+
+    def add_control_all_equipment(self, user):
+        '''
+        Docstring here
+        '''
+
+        self.add_control(
+            "cyequ:equipment-owned",
+            href=url_for("api.equipmentbyuser", user=user),
+            method="GET",
+            encoding="json",
+            title="A list of all equipment owned by the given user's name."
+        )
+
+
+class UserBuilder(CommonBuilder):
+    '''
+    Class docstring here
+    '''
 
     def add_control_add_user(self):
         '''
@@ -118,7 +137,7 @@ class UserBuilder(MasonBuilder):
 
         self.add_control(
             "edit",
-            href=url_for("api.useritem", name=user),
+            href=url_for("api.useritem", user=user),
             method="PUT",
             encoding="json",
             title="Edits user's information",
@@ -126,23 +145,10 @@ class UserBuilder(MasonBuilder):
         )
 
 
-class EquipmentBuilder(MasonBuilder):
+class EquipmentBuilder(CommonBuilder):
     '''
     Class docstring here
     '''
-
-    def add_control_all_equipment(self, user):
-        '''
-        Docstring here
-        '''
-
-        self.add_control(
-            "cyequ:equipment-owned",
-            href=url_for("api.equipmentbyuser", user=user),
-            method="GET",
-            encoding="json",
-            title="A list of all equipment owned by the given user's name."
-        )
 
     def add_control_add_equipment(self, user):
         '''
@@ -179,7 +185,7 @@ class EquipmentBuilder(MasonBuilder):
 
         self.add_control(
             "edit",
-            href=url_for("api.equipmentitem", name=user, equipment=equipment),
+            href=url_for("api.equipmentitem", user=user, equipment=equipment),
             method="PUT",
             encoding="json",
             title="Edits equipment's information",
@@ -193,13 +199,13 @@ class EquipmentBuilder(MasonBuilder):
 
         self.add_control(
             "cyequ:delete",
-            href=url_for("api.equipmentitem", name=user, equipment=equipment),
+            href=url_for("api.equipmentitem", user=user, equipment=equipment),
             method="DELETE",
             title="Deletes this equipment"
         )
 
 
-class ComponentBuilder(MasonBuilder):
+class ComponentBuilder(CommonBuilder):
     '''
     Class docstring here
     '''
@@ -211,7 +217,7 @@ class ComponentBuilder(MasonBuilder):
         self.add_control(
             "edit",
             href=url_for("api.componentitem",
-                         name=user,
+                         user=user,
                          equipment=equipment,
                          component=component),
             method="PUT",
@@ -227,7 +233,7 @@ class ComponentBuilder(MasonBuilder):
         self.add_control(
             "cyequ:delete",
             href=url_for("api.componentitem",
-                         name=user,
+                         user=user,
                          equipment=equipment,
                          component=component),
             method="DELETE",

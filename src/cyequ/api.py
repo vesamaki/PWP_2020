@@ -36,37 +36,37 @@ from cyequ.resources.equipment import EquipmentByUser, \
 from cyequ.resources.component import ComponentItem  # noqa:E402
 
 # Adapted from PWP Ex3
-# Static route: Link relations - Untested
+# Static route: Link relations - DONE
 @api_bp.route(LINK_RELATIONS_URL, methods=['GET'])
 def redirect_to_apiary_link_rels():
     return redirect(APIARY_URL + "link-relations")
 
-# Static route: User Profile - Untested
+# Static route: User Profile - DONE
 @api_bp.route(USER_PROFILE, methods=['GET'])
 def redirect_to_apiary_user_prof():
     return redirect(APIARY_URL + "user-profile")
 
-# Static route: Equipment Profile - Untested
+# Static route: Equipment Profile - DONE
 @api_bp.route(EQUIPMENT_PROFILE, methods=['GET'])
 def redirect_to_apiary_equip_prof():
     return redirect(APIARY_URL + "equipment-profile")
 
-# Static route: Component Profile - Untested
+# Static route: Component Profile - DONE
 @api_bp.route(COMPONENT_PROFILE, methods=['GET'])
 def redirect_to_apiary_comp_prof():
     return redirect(APIARY_URL + "component-profile")
 
-# Static route: Error Profile - Untested
+# Static route: Error Profile - DONE
 @api_bp.route(ERROR_PROFILE, methods=['GET'])
 def redirect_to_apiary_err_prof():
     return redirect(APIARY_URL + "error-profile")
 
 
 # Registering resource routes - Untested
-api.add_resource(EntryURL, "/api/")
-api.add_resource(UserCollection, "/api/users/")
+api.add_resource(EntryURL, "/api/")  # DONE
+api.add_resource(UserCollection, "/api/users/")  # DONE
 api.add_resource(UserItem, "/api/users/<user>/")
 api.add_resource(EquipmentByUser, "/api/users/<user>/all_equipment/")
 api.add_resource(EquipmentItem, "/api/users/<user>/all_equipment/<equipment>/")
 api.add_resource(ComponentItem, "/api/users/<user>/all_equipment/"
-                                "<equipment>/<component>")
+                                "<equipment>/<component>/")
