@@ -15,34 +15,25 @@ api.ulr_for -> ulr_for:
 """
 
 # Library imports
-from flask import json, Blueprint, redirect, Response
+from flask import Blueprint, redirect
 from flask_restful import Api
 
 # Project imports
 from cyequ.constants import USER_PROFILE, EQUIPMENT_PROFILE, \
                             COMPONENT_PROFILE, ERROR_PROFILE, \
                             LINK_RELATIONS_URL, APIARY_URL
-from cyequ.utils import MasonBuilder
 
 api_bp = Blueprint("api", __name__)
-ref_bp = Blueprint("reference", __name__)
+# ref_bp = Blueprint("reference", __name__)  # , url_prefix="")
 api = Api(api_bp)
 
 # this import must be placed after we create api to avoid issues with
 # circular imports
+from cyequ.resources.entry import EntryURL  # noqa:E402
 from cyequ.resources.user import UserCollection, UserItem  # noqa:E402
 from cyequ.resources.equipment import EquipmentByUser, \
                                       EquipmentItem  # noqa:E402
 from cyequ.resources.component import ComponentItem  # noqa:E402
-
-
-# API Entry Point - Untested
-@api_bp.route("/", methods=['GET'])
-def entry_point():
-    body = MasonBuilder()
-    body.add_namespace("cyequ", LINK_RELATIONS_URL)
-    body.add_control_all_users()
-    return Response(json.dumps(body), 200, mimetype="MASON")
 
 # Adapted from PWP Ex3
 # Static route: Link relations - Untested
@@ -72,6 +63,7 @@ def redirect_to_apiary_err_prof():
 
 
 # Registering resource routes - Untested
+api.add_resource(EntryURL, "/api/")
 api.add_resource(UserCollection, "/api/users/")
 api.add_resource(UserItem, "/api/users/<user>/")
 api.add_resource(EquipmentByUser, "/api/users/<user>/all_equipment/")

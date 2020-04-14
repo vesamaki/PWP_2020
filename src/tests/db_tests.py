@@ -15,8 +15,8 @@ from sqlalchemy.engine import Engine
 from sqlalchemy import event
 from sqlalchemy.exc import IntegrityError, StatementError
 
-import app
-from app import User, Equipment, Component, Ride
+from cyequ import create_app, db
+from cyequ.models import User, Equipment, Component, Ride
 
 
 @event.listens_for(Engine, "connect")
@@ -31,18 +31,20 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 @pytest.fixture
 def db_handle():
     db_fd, db_fname = tempfile.mkstemp()
-    app.app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + db_fname
-    app.app.config["TESTING"] = True
+    config = {
+              "SQLALCHEMY_DATABASE_URI": "sqlite:///" + db_fname,
+              "TESTING": True
+              }
+
+    app = create_app(config)
 
     with app.app.app_context():
         app.db.create_all()
 
-    yield app.db
+    yield app
 
-    app.db.session.remove()
     os.close(db_fd)
     os.unlink(db_fname)
-
 
 # Adapted from Ex2
 # The below _get_ -functions are used by the tests to populate the database

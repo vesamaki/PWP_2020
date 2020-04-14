@@ -10,6 +10,7 @@ instance/
 .coverage
 htmlcov/
 
+pwp-venv/
 dist/
 build/
 *.egg-info/
