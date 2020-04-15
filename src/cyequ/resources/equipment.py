@@ -69,7 +69,7 @@ class EquipmentByUser(Resource):
         Adding a component to equipment
         '''
         # Check for json. If fails, respond with error 415
-        if not request.json:
+        if request.json is None:
             return create_error_response(415, "Unsupported media type",
                                          "Requests must be JSON"
                                          )
@@ -78,7 +78,8 @@ class EquipmentByUser(Resource):
             validate(request.json, component_schema())
         except ValidationError as err:
             return create_error_response(400, "Invalid JSON"
-                                         "document", str(err))
+                                         "document", str(err)
+                                         )
         # Find user by name in database. If not found, respond with error 404
         db_user = User.query.filter_by(name=user).first()
         if db_user is None:
@@ -86,45 +87,28 @@ class EquipmentByUser(Resource):
                                          "No user was found with name {}"
                                          .format(user)
                                          )
+        # Convert %Y-%m-%d %H:%M:%S dates to Python datetime format
+        p_date_added = convert_req_date(request.json.get("date_added"))
+        p_date_retired = convert_req_date(request.json.get("date_retired"))
         # Check if date_retired given
-        if request.json.get("date_retired", None) is not None:
+        if p_date_retired is not None:
             # Check if date_retired is later than date_added
-            if request.json["date_added"] >= request.json["date_retired"]:
+            if p_date_added >= p_date_retired:
                 return create_error_response(409, "Inconsistent dates",
                                              "Retire date {} must be in the "
                                              "future with respect to"
                                              " added date {}"
-                                             .format(request
-                                                     .json["date_retired"],
-                                                     request
-                                                     .json["date_added"])
+                                             .format(p_date_retired,
+                                                     p_date_added
+                                                     )
                                              )
-        # Convert %Y-%m-%d %H:%M:%S dates to Python datetime format
-        # try:
-        p_date_added = convert_req_date(request.json.get("date_added"))
-        p_date_retired = convert_req_date(request.json.get("date_retired"))
-        # except ValueError:
-        #    return create_error_response(400,
-        #                                 "Invalid date",
-        #                                 "{} is not valid date and time in "
-        #                                 "format YYYY-MM-DD hh:mm:ss"
-        #                                 .format(request.json
-        #                                         .get("date_added")
-        #                                         )
-        #                                 )
         # Add equipment to db
         new_equip = Equipment(name=request.json["name"],
                               category=request.json["category"],
                               brand=request.json["brand"],
                               model=request.json["model"],
-                              # date_added=request.json["date_added"],
                               date_added=p_date_added,
                               date_retired=p_date_retired,
-                              # Will look for date_retired and set as None,
-                              # if not found
-                              # Second parameter 'None' maybe not needed
-                              # date_retired=request.json
-                              #              .get("date_retired", None),
                               owner=db_user.id
                               )
         try:
@@ -226,7 +210,7 @@ class EquipmentItem(Resource):
         POST-method definition for EquipmentItem resource. - Untested
         '''
         # Check for json. If fails, respond with error 415
-        if not request.json:
+        if request.json is None:
             return create_error_response(415, "Unsupported media type",
                                          "Requests must be JSON"
                                          )
@@ -235,7 +219,8 @@ class EquipmentItem(Resource):
             validate(request.json, equipment_schema())
         except ValidationError as err:
             return create_error_response(400, "Invalid JSON "
-                                         "document", str(err))
+                                         "document", str(err)
+                                         )
         # Find user by name in database. If not found, respond with error 404
         if User.query.filter_by(name=user).first() is None:
             return create_error_response(404, "Not found",
@@ -258,22 +243,33 @@ class EquipmentItem(Resource):
                                          " Cannot add component."
                                          .format(request.json["category"])
                                          )
-        # Check if date_retired given
-        if request.json.get("date_retired", None) is not None:
-            # Check if date_retired is later than date_added
-            if request.json["date_added"] >= request.json["date_retired"]:
+        # Date checks
+        # Convert %Y-%m-%d %H:%M:%S dates to Python datetime format
+        p_date_added = convert_req_date(request.json.get("date_added"))
+        # Check that component date added is not before
+        # associated equipment's date added
+        if p_date_added < db_equip.date_added:
+            return create_error_response(409, "Inconsistent dates",
+                                         "Equipment's added date {} must be"
+                                         " before Component's date added {}"
+                                         .format(p_date_added,
+                                                 db_equip.date_added
+                                                 )
+                                         )
+        # Check if date_retired given and convert
+        p_date_retired = convert_req_date(request.json.get("date_retired"))
+        # if request.json.get("date_retired") is not None:
+        if p_date_retired is not None:
+            # if request.json["date_added"] >= request.json["date_retired"]:  # noqa: E501
+            if p_date_added >= p_date_retired:
                 return create_error_response(409, "Inconsistent dates",
                                              "Retire date {} must be in the "
                                              "future with respect to"
                                              " added date {}"
-                                             .format(request
-                                                     .json["date_retired"],
-                                                     request
-                                                     .json["date_added"])
+                                             .format(p_date_retired,
+                                                     p_date_added
+                                                     )
                                              )
-        # Convert %Y-%m-%d %H:%M:%S dates to Python datetime format
-        p_date_added = convert_req_date(request.json.get("date_added"))
-        p_date_retired = convert_req_date(request.json.get("date_retired"))
         # Add a new component to db for equipment
         new_comp = Component(name=request.json["name"],
                              category=request.json["category"],
@@ -312,7 +308,7 @@ class EquipmentItem(Resource):
         '''
 
         # Check for json. If fails, respond with error 415
-        if not request.json:
+        if request.json is None:
             return create_error_response(415, "Unsupported media type",
                                          "Requests must be JSON"
                                          )
@@ -321,7 +317,8 @@ class EquipmentItem(Resource):
             validate(request.json, equipment_schema())
         except ValidationError as err:
             return create_error_response(400, "Invalid JSON "
-                                         "document", str(err))
+                                         "document", str(err)
+                                         )
         # Find user by name in database. If not found, respond with error 404
         if User.query.filter_by(name=user).first() is None:
             return create_error_response(404, "Not found",
@@ -338,27 +335,42 @@ class EquipmentItem(Resource):
                                          )
         # Convert %Y-%m-%d %H:%M:%S dates to Python datetime format
         p_date_added = convert_req_date(request.json.get("date_added"))
+        p_date_retired = convert_req_date(request.json.get("date_retired"))
         # Update equipment data
         db_equip.name = request.json["name"]
         db_equip.category = request.json["category"]
         db_equip.brand = request.json["brand"]
         db_equip.model = request.json["model"]
-        db_equip.date_added = p_date_added
+        # Make sure equipment date_added cannot be moved forward in time if
+        # equipment has associated components
+        if db_equip.date_added >= p_date_added:
+            db_equip.date_added = p_date_added
+        elif not Component.query.filter_by(equipment_id=db_equip.id).first():
+            db_equip.date_added = p_date_added
+        else:
+            return create_error_response(409, "Inconsistent dates",
+                                         "New added date {} must not be in the"
+                                         "future of current added date {} if "
+                                         "equipment has components associated"
+                                         " with it"
+                                         .format(p_date_added,
+                                                 db_equip.date_added
+                                                 )
+                                         )
         # When retiring equipment, also retire associated components
         # Check if date_retired given for equipment
         if request.json.get("date_retired") is not None:
             # Check if date_retired is later than date_added
-            if request.json["date_added"] >= request.json["date_retired"]:
+            if p_date_added >= p_date_retired:
                 return create_error_response(409, "Inconsistent dates",
                                              "Retire date {} must be in the "
                                              "future with respect to"
                                              " added date {}"
-                                             .format(request
-                                                     .json["date_retired"],
-                                                     db_equip.date_added)
+                                             .format(p_date_retired,
+                                                     p_date_added
+                                                     )
                                              )
             # Update equipment date_retired
-            p_date_retired = convert_req_date(request.json.get("date_retired"))
             db_equip.date_retired = p_date_retired
             # Loop all associated components for equipment
             for component in Component.query.filter_by(equipment_id=db_equip.id).all():  # noqa: 501

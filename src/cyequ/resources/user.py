@@ -52,7 +52,7 @@ class UserCollection(Resource):
         '''
 
         # Check for json.
-        if not request.json:
+        if request.json is None:
             return create_error_response(415, "Unsupported media type",
                                          "Requests must be JSON"
                                          )
@@ -61,7 +61,8 @@ class UserCollection(Resource):
             validate(request.json, user_schema())
         except ValidationError as err:
             return create_error_response(400, "Invalid JSON "
-                                         "document", str(err))
+                                         "document", str(err)
+                                         )
         # Add user to db
         user = User(
             name=request.json["name"]
@@ -124,7 +125,7 @@ class UserItem(Resource):
         '''
 
         # Check for json. If fails, respond with error 415
-        if not request.json:
+        if request.json is None:
             return create_error_response(415, "Unsupported media type",
                                          "Requests must be JSON"
                                          )
@@ -133,7 +134,8 @@ class UserItem(Resource):
             validate(request.json, user_schema())
         except ValidationError as err:
             return create_error_response(400, "Invalid JSON "
-                                         "document", str(err))
+                                         "document", str(err)
+                                         )
         # Find user by name in database. If not found, respond with error 404
         db_user = User.query.filter_by(name=user).first()
         if db_user is None:

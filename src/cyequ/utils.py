@@ -255,7 +255,7 @@ def create_error_response(status_code, title, message=None):
 
 
 def convert_req_date(request_date):
-    if request_date:
+    if request_date is not None:
         return datetime.strptime(request_date, "%Y-%m-%d %H:%M:%S")
     else:
         return None
