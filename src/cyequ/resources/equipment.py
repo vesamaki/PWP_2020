@@ -183,7 +183,7 @@ class EquipmentItem(Resource):
             comp.add_control("self", url_for("api.componentitem",
                                              user=user,
                                              equipment=equipment,
-                                             component=component.name
+                                             component=component.category
                                              )
                              )
             comp.add_control("profile", COMPONENT_PROFILE)
@@ -240,8 +240,10 @@ class EquipmentItem(Resource):
             return create_error_response(409,
                                          "Already retired",
                                          "Equipment of name '{}' is retired."
-                                         " Cannot add component."
-                                         .format(request.json["category"])
+                                         " Cannot add component {}."
+                                         .format(db_equip.name,
+                                                 request.json["category"]
+                                                 )
                                          )
         # Date checks
         # Convert %Y-%m-%d %H:%M:%S dates to Python datetime format
@@ -250,10 +252,11 @@ class EquipmentItem(Resource):
         # associated equipment's date added
         if p_date_added < db_equip.date_added:
             return create_error_response(409, "Inconsistent dates",
-                                         "Equipment's added date {} must be"
-                                         " before Component's date added {}"
-                                         .format(p_date_added,
-                                                 db_equip.date_added
+                                         "Components's date added {} must be"
+                                         " after associated equipment's "
+                                         "date added {}"
+                                         .format(db_equip.date_added,
+                                                 p_date_added
                                                  )
                                          )
         # Check if date_retired given and convert
@@ -285,6 +288,8 @@ class EquipmentItem(Resource):
         except IntegrityError:
             # In case of database error
             db.session.rollback()
+            # Currently doesn't work.
+            # No functioning constraint for unique "active component".
             return create_error_response(409,
                                          "Already in service",
                                          "Unretired component of category"

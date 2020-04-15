@@ -127,7 +127,19 @@ class ComponentItem(Resource):
         db_comp.category = request.json["category"]
         db_comp.brand = request.json["brand"]
         db_comp.model = request.json["model"]
-        db_comp.date_added = p_date_added
+        # Make sure component date_added cannot be moved backward in time
+        # past associated equipment's date_added
+        if db_equip.date_added <= p_date_added:
+            db_comp.date_added = p_date_added
+        else:
+            return create_error_response(409, "Inconsistent dates",
+                                         "New added date {} must be at or in "
+                                         "the future of associated equipment's"
+                                         " current added date {}"
+                                         .format(p_date_added,
+                                                 db_equip.date_added
+                                                 )
+                                         )
         # Check if date_retired given
         if p_date_retired is not None:
             # Check if date_retired is later than date_added
