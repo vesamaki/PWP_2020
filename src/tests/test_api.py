@@ -21,7 +21,11 @@ from cyequ.constants import MASON, USER_PROFILE, EQUIPMENT_PROFILE, \
                             LINK_RELATIONS_URL, APIARY_URL
 from cyequ.models import User, Equipment, Component  # , Ride
 
-from tests.utils import _get_user, _get_equipment, _get_component, _get_ride
+from tests.utils import _get_user, _get_equipment, _get_component, _get_ride, \
+                        _populate_db, _get_sensor_json, _check_namespace, \
+                        _check_control_get_method, _check_control_post_method, \
+                        _check_control_put_method, \
+                        _check_control_delete_method
 
 
 @event.listens_for(Engine, "connect")
@@ -54,22 +58,5 @@ def client():
     os.unlink(db_fname)
 
 
-def _populate_db():
-    '''
-    We're prefixing this function and its ilk with a single underscore to
-    softly hint that these are the test module's internal tools.
-    '''
-
-    # Create everything
-    user = _get_user()
-    equipment = _get_equipment()
-    component = _get_component()
-    ride = _get_ride()
-    db.session.add(user)
-    db.session.add(equipment)
-    db.session.add(component)
-    db.session.add(ride)
-    db.session.commit()
-
-    class TestUserCollection(object):
-        
+class TestUserCollection(object):
+    pass
