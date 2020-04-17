@@ -265,3 +265,149 @@ def _get_ride(equi=1, rid=1):
         equipment_id=equi,
         rider=rid
         )
+
+
+def _populate_db():
+    '''
+    We're prefixing this function and its ilk with a single underscore to
+    softly hint that these are the test module's internal tools.
+    '''
+
+    # Create everything
+    user = _get_user()
+    equipment = _get_equipment()
+    component = _get_component()
+    ride = _get_ride()
+    db.session.add(user)
+    db.session.add(equipment)
+    db.session.add(component)
+    db.session.add(ride)
+    db.session.commit()
+
+
+# The following are adapted from PWP-course Ex3 Testing
+def _get_user_json(number=1):
+    """
+    Creates a valid User JSON object to be used for PUT and POST tests.
+    """
+
+    return {"name": "joonas-{}".format(number)}
+
+
+def _get_equipment_json(number=1, ret=False):
+    """
+    Creates a valid Equipment JSON object to be used for PUT and POST tests.
+    """
+
+    if ret:
+        return {"name": "Polkuaura-{}".format(number),
+                "category": "Mountain bike",
+                "brand": "Canyon",
+                "model": "Spectral AL EX 6",
+                "date_added": "2019-11-21 11:20:30",
+                "date_added": "2019-11-21 11:20:30"
+                }
+    else:
+        return {"name": "Polkuaura-{}".format(number),
+                "category": "Mountain bike",
+                "brand": "Canyon",
+                "model": "Spectral AL EX 6",
+                "date_added": "2019-11-21 11:20:30"
+                }
+
+
+def _get_component_json(number=1):
+    """
+    Creates a valid Component JSON object to be used for PUT and POST tests.
+    """
+
+    return {"name": "Hissitolppa-{}".format(number),
+            "category": "Seat Post",
+            "brand": "RockShox",
+            "model": "Reberb B1",
+            "date_added": "2019-11-21 11:20:30"
+            }
+
+
+def _check_namespace(client, response):
+    """
+    Checks that the "senhub" namespace is found from the response body, and
+    that its "name" attribute is a URL that can be accessed.
+    """
+
+    ns_href = response["@namespaces"]["senhub"]["name"]
+    resp = client.get(ns_href)
+    assert resp.status_code == 200
+
+
+def _check_control_get_method(ctrl, client, obj):
+    """
+    Checks a GET type control from a JSON object be it root document or an item
+    in a collection. Also checks that the URL of the control can be accessed.
+    """
+
+    href = obj["@controls"][ctrl]["href"]
+    resp = client.get(href)
+    assert resp.status_code == 200
+
+
+def _check_control_post_method(ctrl, client, obj):
+    """
+    Checks a POST type control from a JSON object be it root document
+    or an item in a collection. In addition to checking the "href" attribute,
+    also checks that method, encoding and schema can be found from the control.
+    Also validates a valid sensor against the schema of the control to ensure
+    that they match. Finally checks that using the control results in the
+    correct status code of 201.
+    """
+
+    ctrl_obj = obj["@controls"][ctrl]
+    href = ctrl_obj["href"]
+    method = ctrl_obj["method"].lower()
+    encoding = ctrl_obj["encoding"].lower()
+    schema = ctrl_obj["schema"]
+    assert method == "post"
+    assert encoding == "json"
+    body = _get_sensor_json()
+    validate(body, schema)
+    resp = client.post(href, json=body)
+    assert resp.status_code == 201
+
+
+def _check_control_put_method(ctrl, client, obj):
+    """
+    Checks a PUT type control from a JSON object be it root document or an item
+    in a collection. In addition to checking the "href" attribute, also checks
+    that method, encoding and schema can be found from the control. Also
+    validates a valid sensor against the schema of the control to ensure that
+    they match. Finally checks that using the control results in the correct
+    status code of 204.
+    """
+
+    ctrl_obj = obj["@controls"][ctrl]
+    href = ctrl_obj["href"]
+    method = ctrl_obj["method"].lower()
+    encoding = ctrl_obj["encoding"].lower()
+    schema = ctrl_obj["schema"]
+    assert method == "put"
+    assert encoding == "json"
+    body = _get_sensor_json()
+    body["name"] = obj["name"]
+    validate(body, schema)
+    resp = client.put(href, json=body)
+    assert resp.status_code == 204
+
+
+def _check_control_delete_method(ctrl, client, obj):
+    """
+    Checks a DELETE type control from a JSON object be it root document or an
+    item in a collection. Checks the contrl's method in addition to its "href".
+    Also checks that using the control results in the correct
+    status code of 204.
+    """
+
+    href = obj["@controls"][ctrl]["href"]
+    method = obj["@controls"][ctrl]["method"].lower()
+    assert method == "delete"
+    resp = client.delete(href)
+    assert resp.status_code == 204
