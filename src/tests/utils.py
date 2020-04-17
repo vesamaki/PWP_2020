@@ -8,21 +8,195 @@ or with additional details:
 
 # Library imports
 from datetime import datetime
+from jsonschema import validate
 
 # Project imports
+from cyequ.constants import APIARY_URL
 from cyequ.models import User, Equipment, Component, Ride
+
+
+# Adapted from Ex3
+def _get_user_json(name="Jenni"):
+    """
+    Creates a valid user JSON object to be used for PUT and POST tests.
+    """
+
+    return {"name": name}
+
+
+def _get_equipment_json(name="Hyppykeppi",
+                        category="Mountain Bike",
+                        brand="Santa Cruz",
+                        model="Tall Boy",
+                        date_added=datetime(2019, 11, 21, 11, 20, 30),
+                        date_retired=None
+                        ):
+    """
+    Creates a valid equipment JSON object to be used for PUT and POST tests.
+    With optional date_retired input parameter use datetime()
+    """
+
+    if date_retired is None:
+        return {"name": name,
+                "category": category,
+                "brand": brand,
+                "model": model,
+                "date_added": date_added
+                }
+    else:
+        return {"name": name,
+                "category": category,
+                "brand": brand,
+                "model": model,
+                "date_added": date_added,
+                "date_retired": date_retired
+                }
+
+
+def _get_component_json(name="Vauhtiheijastin",
+                        category="Front Reflector",
+                        brand="BBB",
+                        model="Aero Reflector",
+                        date_added=datetime(2019, 11, 21, 11, 20, 30),
+                        date_retired=None
+                        ):
+    """
+    Creates a valid equipment JSON object to be used for PUT and POST tests.
+    With optional date_retired input parameter use datetime()
+    """
+
+    if date_retired is None:
+        return {"name": name,
+                "category": category,
+                "brand": brand,
+                "model": model,
+                "date_added": date_added
+                }
+    else:
+        return {"name": name,
+                "category": category,
+                "brand": brand,
+                "model": model,
+                "date_added": date_added,
+                "date_retired": date_retired
+                }
+
+
+def _check_namespace(client, response):
+    """
+    Checks that the "cyequ" namespace is found from the response body, and
+    that its "name" attribute is a URL that can be accessed. Also check
+    that redirect Location header has valid URL in APIARY.
+    """
+
+    # Read from Json structure
+    ns_href = response["@namespaces"]["cyequ"]["name"]
+    # Sends a get request to name space link
+    resp = client.get(ns_href)
+    # Will redirect to APIARY
+    assert resp.status_code == 302
+    assert resp.headers["Location"] == APIARY_URL + "link-relations"
+
+
+def _check_profile(ctrl, client, obj, resource):
+    """
+    Checks a GET type control from a JSON object be it root document or an item
+    in a collection. Checks that the profile is found from the response body,
+    and that its "href" attribute is a URL that can be accessed. Also check
+    that redirect Location header has valid URL in APIARY.
+    """
+
+    # Read from Json structure
+    href = obj["@controls"][ctrl]["href"]
+    # Sends a get request to name space link
+    resp = client.get(href)
+    # Will redirect to APIARY
+    assert resp.status_code == 302
+    assert resp.headers["Location"] == APIARY_URL + resource
+
+
+def _check_control_get_method(ctrl, client, obj):
+    """
+    Checks a GET type control from a JSON object be it root document or an item
+    in a collection. Also checks that the URL of the control can be accessed.
+    """
+
+    href = obj["@controls"][ctrl]["href"]
+    resp = client.get(href)
+    assert resp.status_code == 200
+
+
+def _check_control_delete_method(ctrl, client, obj):
+    """
+    Checks a DELETE type control from a JSON object be it root document or an
+    item in a collection. Checks the contrl's method in addition to its "href".
+    Also checks that using the control results in the correct status
+    code of 204.
+    """
+
+    href = obj["@controls"][ctrl]["href"]
+    method = obj["@controls"][ctrl]["method"].lower()
+    assert method == "delete"
+    resp = client.delete(href)
+    assert resp.status_code == 204
+
+
+def _check_control_put_method(ctrl, client, obj, content):
+    """
+    Checks a PUT type control from a JSON object be it root document or an item
+    in a collection. In addition to checking the "href" attribute, also checks
+    that method, encoding and schema can be found from the control. Also
+    validates a valid content against the schema of the control to ensure that
+    they match. Finally checks that using the control results in the correct
+    status code of 204.
+    """
+
+    ctrl_obj = obj["@controls"][ctrl]
+    href = ctrl_obj["href"]
+    method = ctrl_obj["method"].lower()
+    encoding = ctrl_obj["encoding"].lower()
+    schema = ctrl_obj["schema"]
+    assert method == "put"
+    assert encoding == "json"
+    body = content
+    body["name"] = obj["name"]
+    validate(body, schema)
+    resp = client.put(href, json=body)
+    assert resp.status_code == 204
+
+
+def _check_control_post_method(ctrl, client, obj, content):
+    """
+    Checks a POST type control from a JSON object be it root document or
+    an item in a collection. In addition to checking the "href" attribute,
+    also checks that method, encoding and schema can be found from the
+    control. Also validates a valid content against the schema of the control
+    to ensure that they match. Finally checks that using the control results
+    in the correct status code of 201.
+    """
+
+    ctrl_obj = obj["@controls"][ctrl]
+    href = ctrl_obj["href"]
+    method = ctrl_obj["method"].lower()
+    encoding = ctrl_obj["encoding"].lower()
+    schema = ctrl_obj["schema"]
+    assert method == "post"
+    assert encoding == "json"
+    body = content
+    validate(body, schema)
+    resp = client.post(href, json=body)
+    assert resp.status_code == 201
 
 
 # Adapted from Ex2
 # The below _get_ -functions are used by the tests to populate the database
+# for db_tests.py
 def _get_user(username="janne"):
     """
     Function used to set a user instance's data
     Used by test-functions
     """
-    return User(
-        name="user-{}".format(username)
-    )
+    return User(name="user-{}".format(username))
 
 
 def _get_equipment(cat="Mountain Bike", ret=False, own=1, number=1):

@@ -12,7 +12,7 @@ from cyequ.utils import UserBuilder
 
 
 # API Entry URL - Untested
-class EntryURL(Resource):
+class Entry(Resource):
     '''
     Class docstring here
     '''

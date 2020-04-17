@@ -16,3 +16,4 @@ build/
 *.egg-info/
 
 *.db
+src/tests/~$API_tests_log.xlsx

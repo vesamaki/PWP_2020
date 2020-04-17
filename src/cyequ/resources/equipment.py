@@ -43,7 +43,7 @@ class EquipmentByUser(Resource):
         # Add general controls to message body
         body.add_namespace("cyequ", LINK_RELATIONS_URL)
         body.add_control("self", url_for("api.equipmentbyuser", user=user))
-        body.add_control("cyequ-owner", url_for("api.useritem", user=user))
+        body.add_control("cyequ:owner", url_for("api.useritem", user=user))
         body.add_control_add_equipment(user)
         # Loop through all equipment items owned by user
         for equipment in db_user.hasEquip:

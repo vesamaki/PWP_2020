@@ -106,7 +106,7 @@ class UserItem(Resource):
                                          )
         # Instantiate response message body
         body = UserBuilder(
-            # name=db_user.name
+            name=db_user.name
         )
         # Add controls to message body
         body.add_namespace("cyequ", LINK_RELATIONS_URL)
@@ -117,7 +117,6 @@ class UserItem(Resource):
         body.add_control_all_equipment(user)
         return Response(json.dumps(body), 200, mimetype=MASON)
 
-    # Not implemented
     def put(self, user):
         '''
         PUT-method definition for UserItem resource. - Untested

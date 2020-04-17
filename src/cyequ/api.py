@@ -29,7 +29,7 @@ api = Api(api_bp)
 
 # this import must be placed after we create api to avoid issues with
 # circular imports
-from cyequ.resources.entry import EntryURL  # noqa:E402
+from cyequ.resources.entry import Entry  # noqa:E402
 from cyequ.resources.user import UserCollection, UserItem  # noqa:E402
 from cyequ.resources.equipment import EquipmentByUser, \
                                       EquipmentItem  # noqa:E402
@@ -63,7 +63,7 @@ def redirect_to_apiary_err_prof():
 
 
 # Registering resource routes - Untested
-api.add_resource(EntryURL, "/api/")  # DONE
+api.add_resource(Entry, "/api/")  # DONE
 api.add_resource(UserCollection, "/api/users/")  # DONE
 api.add_resource(UserItem, "/api/users/<user>/")
 api.add_resource(EquipmentByUser, "/api/users/<user>/all_equipment/")
