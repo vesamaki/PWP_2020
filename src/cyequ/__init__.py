@@ -7,13 +7,27 @@ See https://github.com/vesamaki/PWP_2020 for details
 
 # Library imports
 import os
+from datetime import datetime
 from flask import Flask
+from flask.json import JSONEncoder
 from flask_sqlalchemy import SQLAlchemy
 
 # Project imports
 # --
 
 db = SQLAlchemy()
+
+# Custom JSONEncoder for converting dates to ISO 8601
+# Curtesy of StackOverflow:
+# https://stackoverflow.com/questions/43663552/keep-a-datetime-date-in-yyyy-mm-dd-format-when-using-flasks-jsonify  # noqa: E501
+
+
+class CustomJSONEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+
+        return JSONEncoder.default(self, obj)
 
 
 # Adapted from PWP "Flask API Project Layout" -material
@@ -58,5 +72,7 @@ def create_app(test_config=None):
     from cyequ import api
     # Register the blueprint "api_bp" for Flask instance
     app.register_blueprint(api.api_bp)
+    # Use CustomJSONEndcoder
+    app.json_encoder = CustomJSONEncoder
     # print(app.instance_path)  # Just to see where instance data is stored
     return app

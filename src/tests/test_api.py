@@ -1,10 +1,10 @@
-"""
+'''
 This module is used to test my PWP database of app.py.
 Run with:
     pytest db_tests.py
 or with additional details:
     pytest db_tests.py --cov --pep8
-"""
+'''
 
 import json
 import os
@@ -20,14 +20,15 @@ from cyequ import create_app, db
 from cyequ.constants import MASON, USER_PROFILE, EQUIPMENT_PROFILE, \
                             COMPONENT_PROFILE, ERROR_PROFILE, \
                             LINK_RELATIONS_URL, APIARY_URL
-from cyequ.models import User, Equipment, Component  # , Ride
+# from cyequ.models import User, Equipment, Component  # , Ride
 
 from tests.utils import _get_user_json, _get_equipment_json, \
                         _get_component_json, _check_namespace, _check_profile, \
                         _check_control_get_method, \
                         _check_control_delete_method, \
                         _check_control_put_method, \
-                        _check_control_post_method
+                        _check_control_post_method, \
+                        _populate_db
 
 
 @event.listens_for(Engine, "connect")
@@ -59,68 +60,20 @@ def client():
     os.unlink(db_fname)
 
 
-def _populate_db():
-    '''
-    We're prefixing this function and its ilk with a single underscore to
-    softly hint that these are the test module's internal tools.
-    '''
-
-    # Create everything
-    user1 = User(name="Joonas")
-    user2 = User(name="Janne")
-    equipment1 = Equipment(name="Polkuaura",
-                           category="Mountain Bike",
-                           brand="Kona",
-                           model="HeiHei",
-                           date_added=datetime(2019, 11, 21, 11, 20, 30),
-                           owner=1
-                           )
-    equipment2 = Equipment(name="Kisarassi",
-                           category="Road Bike",
-                           brand="Bianchi",
-                           model="Intenso",
-                           date_added=datetime(2019, 11, 21, 11, 20, 30),
-                           date_retired=datetime(2019, 12, 21, 11, 20, 30),
-                           owner=1
-                           )
-    component1 = Component(name="Hissitolppa",
-                           category="Seat Post",
-                           brand="RockShox",
-                           model="Reverb B1",
-                           date_added=datetime(2019, 11, 21, 11, 20, 30),
-                           equipment_id=1
-                           )
-    component2 = Component(name="Takatalvikiekko",
-                           category="Rear Wheel",
-                           brand="Sram",
-                           model="Roam AL 650b",
-                           date_added=datetime(2019, 11, 21, 11, 20, 30),
-                           date_retired=datetime(2019, 12, 21, 11, 20, 30),
-                           equipment_id=1
-                           )
-    db.session.add(user1)
-    db.session.add(user2)
-    db.session.add(equipment1)
-    db.session.add(equipment2)
-    db.session.add(component1)
-    db.session.add(component2)
-    db.session.commit()
-
-
 class TestEntry(object):
-    """
+    '''
     This class implements tests for API Entry Point GET method
     in Entry resource.
-    """
+    '''
 
     RESOURCE_URL = "/api/"
 
     def test_get(self, client):
-        """
+        '''
         Tests the GET method. Checks that the response status code is 200, and
         then checks that all of the expected attributes and controls are
         present, and the controls work.
-        """
+        '''
         resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 200
         body = json.loads(resp.data)
@@ -129,20 +82,20 @@ class TestEntry(object):
 
 
 class TestUserCollection(object):
-    """
+    '''
     This class implements tests for each HTTP method in UserCollection
     resource.
-    """
+    '''
 
     RESOURCE_URL = "/api/users/"
 
     def test_get(self, client):
-        """
+        '''
         Tests the GET method. Checks that the response status code is 200, and
         then checks that all of the expected attributes and controls are
         present, and the controls work. Also checks that all of the items from
         the DB population are present, and their controls.
-        """
+        '''
 
         resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 200
@@ -161,11 +114,11 @@ class TestUserCollection(object):
             assert "name" in item
 
     def test_post(self, client):
-        """
+        '''
         Tests the POST method. Checks all of the possible error codes, and
         also checks that a valid request receives a 201 response with a
         location header that leads into the newly created resource.
-        """
+        '''
 
         valid = _get_user_json()
         # Test for unsupported media type (content-type header)
@@ -196,10 +149,10 @@ class TestUserCollection(object):
 
 
 class TestUserItem(object):
-    """
+    '''
     This class implements tests for each HTTP method in EquipmentByUser
     resource.
-    """
+    '''
 
     # RESOURCE_URL = "/api/users/Joonas/"
     @staticmethod
@@ -207,34 +160,122 @@ class TestUserItem(object):
         return "/api/users/{}/".format(user)
 
     def test_get(self, client):
-        """
+        '''
         Tests the GET method. Checks that the response status code is 200, and
         then checks that all of the expected attributes and controls are
-        present, and the controls work. Also checks that all of the items from
-        the DB popluation are present, and their controls.
-        """
+        present, and the controls work.
+        '''
 
-        resp = client.get(self.INVALID_URL)
+        # Invalid route
+        resp = client.get(self.resource_URL(user="Jaana"))
         assert resp.status_code == 404
+        # Valid route ./Joonas/
+        resp = client.get(self.resource_URL(user="Joonas"))
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        assert body["name"] == "Joonas"
+        _check_namespace(client, body)
+        _check_control_get_method("self", client, body)
+        _check_profile("profile", client, body, "user-profile")
+        _check_control_get_method("collection", client, body)
+        _check_control_put_method("edit", client, body, _get_user_json())
+        _check_control_get_method("cyequ:equipment-owned", client, body)
+
+    def test_put(self, client):
+        '''
+        Tests the PUT method. Checks all of the possible error codes, and also
+        checks that a valid request receives a 204 response. Also tests that
+        when name is changed, the sensor can be found from a its new URI.
+        '''
+
+        # Invalid route
+        resp = client.get(self.resource_URL(user="Jaana"))
+        assert resp.status_code == 404
+        # Valid route ./Joonas/ -> ./Jenni/
+        valid = _get_user_json()
+        # Test for unsupported media type (content-type header)
+        resp = client.put(self.resource_URL(user="Joonas"),
+                          data=json.dumps(valid)
+                          )
+        assert resp.status_code == 415
+        # Tests for invalid JSON document
+        resp = client.put(self.resource_URL(user="Joonas"), json="invalid")
+        assert resp.status_code == 400
+        # Remove required fields
+        valid.pop("name")
+        resp = client.put(self.resource_URL(user="Joonas"), json=valid)
+        assert resp.status_code == 400
+        # Test with valid content
+        valid = _get_user_json()
+        resp = client.put(self.resource_URL(user="Joonas"),
+                          json=valid
+                          )
+        assert resp.status_code == 204
+        # Test changed
+        resp = client.get(self.resource_URL(user="Jenni"))
+        body = json.loads(resp.data)
+        assert body["name"] == valid["name"]
+        # Test existing
+        valid = _get_user_json(name="Janne")
+        resp = client.put(self.resource_URL(user="Jenni"),
+                          json=valid
+                          )
+        assert resp.status_code == 409
 
 
 class TestEquipmentByUser(object):
-    """
+    '''
     This class implements tests for each HTTP method in EquipmentByUser
     resource.
-    """
+    '''
 
     # RESOURCE_URL = "/api/users/Joonas/all_equipment/"
     @staticmethod
     def resource_URL(user="Joonas"):
         return "/api/users/{}/all_equipment/".format(user)
 
+    def test_get(self, client):
+        '''
+        Tests the GET method. Checks that the response status code is 200, and
+        then checks that all of the expected attributes and controls are
+        present, and the controls work. Also checks that all of the items from
+        the DB popluation are present, and their controls.
+        '''
+
+        # Invalid route
+        resp = client.get(self.resource_URL(user="Jaana"))
+        assert resp.status_code == 404
+        # Valid route
+        resp = client.get(self.resource_URL(user="Joonas"))
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        _check_namespace(client, body)
+        _check_control_get_method("self", client, body)
+        _check_control_get_method("cyequ:owner", client, body)
+        _check_control_post_method("cyequ:add-equipment",
+                                   client,
+                                   body,
+                                   _get_equipment_json()
+                                   )
+        assert len(body["items"]) == 2
+        for item in body["items"]:
+            _check_control_get_method("self", client, item)
+            _check_profile("profile", client, item, "equipment-profile")
+        assert body["items"][0]["name"] == "Polkuaura"
+        assert body["items"][1]["name"] == "Kisarassi"
+        assert body["items"][0]["category"] == "Mountain Bike"
+        assert body["items"][1]["category"] == "Road Bike"
+        assert body["items"][0]["date_added"] == "Thu, 2019-11-21 11:20:30 GMT"
+        # assert body["items"][1]["date_added"] == "2019-11-21 11:20:30"
+        assert body["items"][0]["date_retired"] is None
+        # assert body["items"][1]["date_retired"] == "2019-12-21 11:20:30"
+
     def test_post(self, client):
-        """
+        '''
         Tests the POST method. Checks all of the possible error codes, and
         also checks that a valid request receives a 201 response with a
         location header that leads into the newly created resource.
-        """
+        '''
 
         valid = _get_equipment_json()
         valid.pop("category")
@@ -255,10 +296,10 @@ class TestEquipmentByUser(object):
 
 
 class TestEquipmentItem(object):
-    """
+    '''
     This class implements tests for each HTTP method in EquipmentItem
     resource.
-    """
+    '''
 
     # RESOURCE_URL = "/api/users/Joonas/all_equipment/"
     @staticmethod
@@ -269,9 +310,9 @@ class TestEquipmentItem(object):
 
 
 class TestComponentItem(object):
-    """
+    '''
     This class implements tests for each HTTP method in EquipmentByUser
     resource.
-    """
+    '''
 
     pass
