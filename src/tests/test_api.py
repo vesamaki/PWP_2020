@@ -121,8 +121,11 @@ class TestEntry(object):
         then checks that all of the expected attributes and controls are
         present, and the controls work.
         """
+
+        # Store response of GET-request to resp
         resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 200
+        # Store body of response to body
         body = json.loads(resp.data)
         _check_namespace(client, body)
         _check_control_get_method("cyequ:users-all", client, body)
@@ -216,6 +219,11 @@ class TestUserItem(object):
 
         resp = client.get(self.INVALID_URL)
         assert resp.status_code == 404
+        body = json.loads(resp.data)
+        _check_namespace(client, body)
+        _check_profile("profile", client, body, "user-profile")
+        _check_control_get_method("collection", client, body)
+        _check_control_get_method("cyequ:users-all", client, body)
 
 
 class TestEquipmentByUser(object):
