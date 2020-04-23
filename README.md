@@ -25,19 +25,24 @@ When providing time data to a request, tell also the timezone (stored as UTC in 
 
 ##### What to put in __init__.py of resources -folder #####    
 
-##### Fix db_tests.py according to new project structure #####
+##### Fix db_tests.py according to new project structure **Done** #####
 
-##### Do API implementation tests #####
+##### Do API implementation tests **Done** #####
+
+##### FOR CLIENT: Reading ISO 8601 datetime format #####  
+I.e: "2019-11-21T10:20:30"  
+Might help: [StackOveflow](https://stackoverflow.com/questions/127803/how-do-i-parse-an-iso-8601-formatted-date)  
 
 ##### Test cloning, setup and running #####
 Revise instructions here
 
-### Setting up environment - REVISE THIS ###
+### Setting up environment ###
 
 This project followed Oulu University's Programmable Web Project course's guides.  
 Essentially, these steps:
 <ul>
-<li>Create a folder for the project and a virtual environment folder within, i.e. venv</li>
+<li>Create a folder for the project and clone this repo into it. </li>
+<li>Create a virtual environment folder within, i.e. my\\project\\folder\\venv</li>
 <li>Install virtualenv to manage all Python dependencies for the project</li>  
 On Windows: python.exe -m pip install virtualenv
 <li>Then create the virtual environment</li>  
@@ -48,24 +53,24 @@ venv\Scripts\activate.bat
 
 A detailed guide on how to set up the environment can be found from [Lovelace](https://lovelace.oulu.fi/ohjelmoitava-web/programmable-web-project-spring-2020/pwp-setting-up-python-environment-for-exercises/).
 
-Clone the project to your project folder.  
-
 After this the project can be installed in editable mode so that you don't need to reinstall it whenever you make changes. You use pip to install it, and add the -e option. In the folder where the setup.py is, run:
 
 __pip install -e .__
 
-OLD - Essentially, all the libraries and dependencies are listed in the requirements.txt. To set up your environment with these, run:  
-OLD - pip install -r pwp_requirements.txt__
-
 #### Running Flask ####  
-On Windows set the environment variable FLASK_APP to point to file API_flask_db.py -file. This can be done in command prompt, by browsing to folder containing the file and typing command:  
+On Windows set the environment variable FLASK_APP to point to project package. This can be done in command prompt, by browsing to the your project folder and typing command:  
 set FLASK_APP=cyequ  
-set FLASK_ENV=development / production  
+set FLASK_ENV=development
 
 Setup the database:  
-flask init-db
+__flask init-db__
 
 Then run flask with command:  
-flask run  
+__flask run__
 
-Database tests are included in db_tests.py. Using this sort of testing does not require data to exist in the database.
+#### Running Tests ####
+Database tests are included in .\\tests\\test_db.py.  
+API-tests are in .\\tests\\api_test.py.  
+Using this sort of testing does not require Flask to run, or even data to exist in the database.  
+Change directory to your project folder. Both tests can be run with command:  
+__pytest ./src/tests/ --cov=./src/cuequ/ --cov-report term-missing__

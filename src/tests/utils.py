@@ -28,7 +28,7 @@ def _populate_db():
     equipment1 = Equipment(name="Polkuaura",
                            category="Mountain Bike",
                            brand="Kona",
-                           model="HeiHei",
+                           model="Hei Hei",
                            date_added=datetime(2019, 11, 21, 11, 20, 30),
                            owner=1
                            )
@@ -102,7 +102,7 @@ def _get_equipment_json(name="Hyppykeppi",
                 }
 
 
-def _get_component_json(name="Vauhtiheijastin",
+def _get_component_json(name="VauhtiHeijastin",
                         category="Front Reflector",
                         brand="BBB",
                         model="Aero Reflector",
@@ -178,9 +178,9 @@ def _check_control_get_method(ctrl, client, obj):
 def _check_control_delete_method(ctrl, client, obj):
     '''
     Checks a DELETE type control from a JSON object be it root document or an
-    item in a collection. Checks the contrl's method in addition to its "href".
-    Also checks that using the control results in the correct status
-    code of 204.
+    item in a collection. Checks the control's method in addition
+    to its "href". Also checks that using the control results in the
+    correct status code of 204.
     '''
 
     href = obj["@controls"][ctrl]["href"]

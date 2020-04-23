@@ -407,7 +407,7 @@ def test_equipment_columns(app):
     Date_added must be less than date_retired.
     """
 
-    # Uniqueness of name
+    # Uniqueness of name + owner
     equip_1 = _get_equipment()
     equip_2 = _get_equipment()
     with app.app_context():
@@ -506,6 +506,26 @@ def test_equipment_columns(app):
         db.session.add(equipment)
         with pytest.raises(StatementError):
             db.session.commit()
+
+
+# def test_component_repr(app):
+#    """
+#    Trying to test the __repr__ method for better coverage, but Miss 63 of
+#    models.py not disappearing. No time to go to details
+#    """
+#    user = _get_user()
+#    equipment = _get_equipment()
+#    component = _get_component()
+#    with app.app_context():
+#        db.session.add(user)
+#        db.session.add(equipment)
+#        db.session.add(component)
+#        db.session.commit()
+#        assert Component.query.get(1) == "[1] None brand Fox and model " \
+#                                         "34 Factory added on "\
+#                                         "2018-11-21 11:20:30 and" \
+#                                         " retired on None, " \
+#                                         "part of equip 1"
 
 
 def test_component_columns(app):

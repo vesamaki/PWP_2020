@@ -197,7 +197,7 @@ class EquipmentItem(Resource):
                                          )
                          )
         body.add_control("profile", EQUIPMENT_PROFILE)
-        body.add_control("owner", url_for("api.equipmentbyuser", user=user))
+        body.add_control("cyequ:owner", url_for("api.equipmentbyuser", user=user))
         body.add_control_all_users()
         body.add_control_all_equipment(user)
         body.add_control_edit_equipment(user, equipment)
@@ -388,7 +388,8 @@ class EquipmentItem(Resource):
             db.session.rollback()
             return create_error_response(409, "Already exists",
                                          "Equipment with name '{}' already "
-                                         "exists.".format(request.json["name"])
+                                         "exists for user."
+                                         .format(request.json["name"])
                                          )
         return Response(status=204)
 
