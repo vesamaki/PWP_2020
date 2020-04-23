@@ -30,22 +30,23 @@ class Component(db.Model):
 
     # Check that date_retired is not before date_added.
     # Category and date_retired form a unique entity.
-    __table_args__ = (db.CheckConstraint('date_retired > date_added',
-                                         name='_c_add_bfr_retire_cc'), )
     # Following won't work, because
     # SQLite treats all NULL values as different, therefore,
     # a column with a UNIQUE constraint can have
-    # multiple NULL values.
-    # db.UniqueConstraint("category", "date_retired",
-    #                     name="_compo_in_equip_uc"),
+    # multiple NULL values. -> Setting to far in the future
+    __table_args__ = (db.CheckConstraint('date_retired > date_added',
+                                         name='_c_add_bfr_retire_cc'),
+                      db.UniqueConstraint("category", "date_retired",
+                                          name="_compo_in_equip_uc"), )
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), nullable=True)
+    uri = db.Column(db.String(128), nullable=False, unique=True)
+    name = db.Column(db.String(64), nullable=True, unique=False)
     category = db.Column(db.String(64), nullable=False)
     brand = db.Column(db.String(64), nullable=False)
     model = db.Column(db.String(128), nullable=False)
     date_added = db.Column(db.DateTime, nullable=False)
-    date_retired = db.Column(db.DateTime, nullable=True)
+    date_retired = db.Column(db.DateTime, nullable=False)
     equipment_id = db.Column(db.Integer,
                              # Bike is a sum of its parts,
                              # thus delete parts if equipment is deleted
@@ -85,7 +86,8 @@ class Ride(db.Model):
                       )
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), nullable=False, unique=True)
+    uri = db.Column(db.String(128), nullable=False, unique=True)
+    name = db.Column(db.String(64), nullable=False)
     duration = db.Column(db.Integer, nullable=False)
     datetime = db.Column(db.DateTime, nullable=False)
     # A rider (or riders in case of a tandem-bike) can only use one equipment
@@ -134,7 +136,8 @@ class Equipment(db.Model):
                       )
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), nullable=False, unique=False)
+    uri = db.Column(db.String(128), nullable=True, unique=True)
+    name = db.Column(db.String(64), nullable=False)
     category = db.Column(db.String(64), nullable=False)
     brand = db.Column(db.String(64), nullable=False)
     model = db.Column(db.String(128), nullable=False)
@@ -184,6 +187,7 @@ class User(db.Model):
     '''
 
     id = db.Column(db.Integer, primary_key=True)
+    uri = db.Column(db.String(128), nullable=True, unique=True)
     name = db.Column(db.String(64), nullable=False, unique=True)
 
     hasEquip = db.relationship("Equipment",

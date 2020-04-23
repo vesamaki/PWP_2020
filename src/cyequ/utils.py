@@ -255,7 +255,20 @@ def create_error_response(status_code, title, message=None):
 
 
 def convert_req_date(request_date):
+    '''
+    Docstring here
+    '''
+
     if request_date is not None:
         return datetime.strptime(request_date, "%Y-%m-%d %H:%M:%S")
     else:
         return None
+
+
+def hashit(input):
+    '''
+    This function will create a hash from a combination of input obj and
+    datetime.now() output.
+    '''
+
+    return abs(hash(str(input) + str(datetime.utcnow())))

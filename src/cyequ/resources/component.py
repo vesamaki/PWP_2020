@@ -29,26 +29,26 @@ class ComponentItem(Resource):
         '''
 
         # Find user by name in database. If not found, respond with error 404
-        if User.query.filter_by(name=user).first() is None:
+        if User.query.filter_by(uri=user).first() is None:
             return create_error_response(404, "Not found",
-                                         "No user was found with name {}"
+                                         "No user was found with URI {}"
                                          .format(user)
                                          )
         # Find equipment by name in database.
         # If not found, respond with error 404
-        db_equip = Equipment.query.filter_by(name=equipment).first()
+        db_equip = Equipment.query.filter_by(uri=equipment).first()
         if db_equip is None:
             return create_error_response(404, "Not found",
-                                         "No equipment was found with name {}"
+                                         "No equipment was found with URI {}"
                                          .format(equipment)
                                          )
         # Find component by category in database.
         # If not found, respond with error 404
-        db_comp = Component.query.filter_by(category=component).first()
+        db_comp = Component.query.filter_by(uri=component).first()
         if db_comp is None:
             return create_error_response(404, "Not found",
                                          "No component was found with "
-                                         "category {}"
+                                         "URI {}"
                                          .format(component)
                                          )
         # Instantiate response message body and include component data
@@ -97,26 +97,26 @@ class ComponentItem(Resource):
                                          "document", str(err)
                                          )
         # Find user by name in database. If not found, respond with error 404
-        if User.query.filter_by(name=user).first() is None:
+        if User.query.filter_by(hashURI=user).first() is None:
             return create_error_response(404, "Not found",
-                                         "No user was found with name {}"
+                                         "No user was found with URI {}"
                                          .format(user)
                                          )
         # Find equipment by name in database.
         # If not found, respond with error 404
-        db_equip = Equipment.query.filter_by(name=equipment).first()
+        db_equip = Equipment.query.filter_by(hashURI=equipment).first()
         if db_equip is None:
             return create_error_response(404, "Not found",
-                                         "No equipment was found with name {}"
+                                         "No equipment was found with URI {}"
                                          .format(equipment)
                                          )
         # Find component by category in database.
         # If not found, respond with error 404
-        db_comp = Component.query.filter_by(category=component).first()
+        db_comp = Component.query.filter_by(hashURI=component).first()
         if db_comp is None:
             return create_error_response(404, "Not found",
                                          "No component was found with "
-                                         "category {}"
+                                         "URI {}"
                                          .format(component)
                                          )
         # Convert %Y-%m-%d %H:%M:%S dates to Python datetime format
@@ -175,25 +175,25 @@ class ComponentItem(Resource):
         '''
 
         # Find user by name in database. If not found, respond with error 404
-        if User.query.filter_by(name=user).first() is None:
+        if User.query.filter_by(hashURI=user).first() is None:
             return create_error_response(404, "Not found",
-                                         "No user was found with name {}"
+                                         "No user was found with URI {}"
                                          .format(user)
                                          )
         # Find equipment by name in database.
         # If not found, respond with error 404
-        if Equipment.query.filter_by(name=equipment).first() is None:
+        if Equipment.query.filter_by(hashURI=equipment).first() is None:
             return create_error_response(404, "Not found",
-                                         "No equipment was found with name {}"
+                                         "No equipment was found with URI {}"
                                          .format(equipment)
                                          )
         # Find component by category in database.
         # If not found, respond with error 404
-        db_comp = Component.query.filter_by(category=component).first()
+        db_comp = Component.query.filter_by(hashURI=component).first()
         if db_comp is None:
             return create_error_response(404, "Not found",
                                          "No component was found with "
-                                         "category {}"
+                                         "URI {}"
                                          .format(component)
                                          )
         # Delete equipment

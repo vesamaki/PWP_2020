@@ -23,16 +23,22 @@ def _populate_db():
     '''
 
     # Create everything
-    user1 = User(name="Joonas")
-    user2 = User(name="Janne")
-    equipment1 = Equipment(name="Polkuaura",
+    user1 = User(uri="Joonas1",
+                 name="Joonas"
+                 )
+    user2 = User(uri="Janne2",
+                 name="Janne"
+                 )
+    equipment1 = Equipment(uri="Polkuaura1",
+                           name="Polkuaura",
                            category="Mountain Bike",
                            brand="Kona",
                            model="Hei Hei",
                            date_added=datetime(2019, 11, 21, 11, 20, 30),
                            owner=1
                            )
-    equipment2 = Equipment(name="Kisarassi",
+    equipment2 = Equipment(uri="Kisarassi2",
+                           name="Kisarassi",
                            category="Road Bike",
                            brand="Bianchi",
                            model="Intenso",
@@ -40,14 +46,17 @@ def _populate_db():
                            date_retired=datetime(2019, 12, 21, 11, 20, 30),
                            owner=1
                            )
-    component1 = Component(name="Hissitolppa",
+    component1 = Component(uri="Seat Post1",
+                           name="Hissitolppa",
                            category="Seat Post",
                            brand="RockShox",
                            model="Reverb B1",
                            date_added=datetime(2019, 11, 21, 11, 20, 30),
+                           date_retired=datetime(9999, 12, 31, 23, 59, 59),
                            equipment_id=1
                            )
-    component2 = Component(name="Takatalvikiekko",
+    component2 = Component(uri="Rear Wheel2",
+                           name="Takatalvikiekko",
                            category="Rear Wheel",
                            brand="Sram",
                            model="Roam AL 650b",
@@ -240,77 +249,133 @@ def _check_control_post_method(ctrl, client, obj, content):
 # Adapted from Ex2
 # The below _get_ -functions are used by the tests to populate the database
 # for db_tests.py
-def _get_user(username="janne"):
+def _get_user(username="janne", mod=False, id=1):
     '''
     Function used to set a user instance's data
     Used by test-functions
     '''
-    return User(name="user-{}".format(username))
+
+    if mod:
+        return User(name="user-{}".format(username))
+    else:
+        return User(uri="user-{}".format(username) + str(id),
+                    name="user-{}".format(username)
+                    )
 
 
-def _get_equipment(cat="Mountain Bike", ret=False, own=1, number=1):
+def _get_equipment(cat="Mountain Bike", ret=False, own=1,
+                   number=1, mod=False, id=1):
     '''
     Function used to set an equipment instance's data
     Used by test-functions
     '''
-    if ret:
-        equipout = Equipment(
-                        name="Bike-{}".format(number),
-                        category="{}".format(cat),
-                        brand="Kona",
-                        model="HeiHei",
-                        date_added=datetime(2018, 11, 21, 11, 20, 30),
-                        date_retired=datetime.now(),
-                        owner=own
-                        )
+
+    if mod:
+        if ret:
+            equipout = Equipment(name="Bike-{}".format(number),
+                                 category="{}".format(cat),
+                                 brand="Kona",
+                                 model="HeiHei",
+                                 date_added=datetime(2018, 11, 21, 11, 20, 30),
+                                 date_retired=datetime.now(),
+                                 owner=own
+                                 )
+        else:
+            equipout = Equipment(name="Bike-{}".format(number),
+                                 category="{}".format(cat),
+                                 brand="Kona",
+                                 model="HeiHei",
+                                 date_added=datetime(2018, 11, 21, 11, 20, 30),
+                                 # date_retired=datetime(2019, 11, 21, 11, 20, 30),  # noqa: E501
+                                 owner=own
+                                 )
     else:
-        equipout = Equipment(
-                        name="Bike-{}".format(number),
-                        category="{}".format(cat),
-                        brand="Kona",
-                        model="HeiHei",
-                        date_added=datetime(2018, 11, 21, 11, 20, 30),
-                        # date_retired=datetime(2019, 11, 21, 11, 20, 30),
-                        owner=own
-                        )
+        if ret:
+            equipout = Equipment(uri="Bike-{}".format(number) + str(id),
+                                 name="Bike-{}".format(number),
+                                 category="{}".format(cat),
+                                 brand="Kona",
+                                 model="HeiHei",
+                                 date_added=datetime(2018, 11, 21, 11, 20, 30),
+                                 date_retired=datetime.now(),
+                                 owner=own
+                                 )
+        else:
+            equipout = Equipment(uri="Bike-{}".format(number) + str(id),
+                                 name="Bike-{}".format(number),
+                                 category="{}".format(cat),
+                                 brand="Kona",
+                                 model="HeiHei",
+                                 date_added=datetime(2018, 11, 21, 11, 20, 30),
+                                 # date_retired=datetime(2019, 11, 21, 11, 20, 30),  # noqa: E501
+                                 owner=own
+                                 )
     return equipout
 
 
-def _get_component(cat="Fork", ret=False, equi=1):
+def _get_component(cat="Fork", ret=False, equi=1, mod=False, id=1):
     '''
     Function used to set a component instance's data
     Used by test-functions
     '''
-    if ret:
-        compout = Component(
-                        category="{}".format(cat),
-                        brand="Fox",
-                        model="34 Factory",
-                        date_added=datetime(2018, 11, 21, 11, 20, 30),
-                        date_retired=datetime.now(),
-                        equipment_id=equi
-                        )
+
+    if mod:
+        if ret:
+            compout = Component(category="{}".format(cat),
+                                brand="Fox",
+                                model="34 Factory",
+                                date_added=datetime(2018, 11, 21, 11, 20, 30),
+                                date_retired=datetime.now(),
+                                equipment_id=equi
+                                )
+        else:
+            compout = Component(category="{}".format(cat),
+                                brand="Fox",
+                                model="34 Factory",
+                                date_added=datetime(2018, 11, 21, 11, 20, 30),
+                                # date_retired=datetime(2019, 11, 21, 11, 20, 30),  # noqa: E501
+                                equipment_id=equi
+                                )
     else:
-        compout = Component(
-                        category="{}".format(cat),
-                        brand="Fox",
-                        model="34 Factory",
-                        date_added=datetime(2018, 11, 21, 11, 20, 30),
-                        # date_retired=datetime(2019, 11, 21, 11, 20, 30),
-                        equipment_id=equi
-                        )
+        if ret:
+            compout = Component(uri="{}".format(cat) + str(id),
+                                category="{}".format(cat),
+                                brand="Fox",
+                                model="34 Factory",
+                                date_added=datetime(2018, 11, 21, 11, 20, 30),
+                                date_retired=datetime.now(),
+                                equipment_id=equi
+                                )
+        else:
+            compout = Component(uri="{}".format(cat) + str(id),
+                                category="{}".format(cat),
+                                brand="Fox",
+                                model="34 Factory",
+                                date_added=datetime(2018, 11, 21, 11, 20, 30),
+                                date_retired=datetime(9999, 12, 31, 23, 59, 59),  # noqa: E501
+                                equipment_id=equi
+                                )
     return compout
 
 
-def _get_ride(equi=1, rid=1):
+def _get_ride(equi=1, rid=1, mod=False, id=1):
     '''
     Function used to set a ride instance's data
     Used by test-functions
     '''
-    return Ride(
-        name="Ajo-{}".format(rid),
-        duration=120,
-        datetime=datetime.now(),
-        equipment_id=equi,
-        rider=rid
-        )
+
+    if mod:
+        return Ride(name="Ajo-{}".format(rid),
+                    duration=120,
+                    datetime=datetime.now(),
+                    equipment_id=equi,
+                    rider=rid
+                    )
+    else:
+        return Ride(uri="Ajo-{}".format(rid) + str(id),
+                    name="Ajo-{}".format(rid),
+                    duration=120,
+                    datetime=datetime.now(),
+                    equipment_id=equi,
+                    rider=rid
+                    )

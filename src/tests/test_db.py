@@ -95,7 +95,7 @@ def test_create_instances(app):
         assert db_component in db_equipment.hasCompos
 
 
-def test_user_query_mod_del(app):
+def test_user_query(app):
     """
     Tests the querying of a user instance
     """
@@ -150,7 +150,7 @@ def test_equipment_query(app):
         db.session.add(user)
         db.session.add(equip)
         db.session.commit()
-        equip1 = Equipment.query.filter_by(name="Bike-1").first()
+        equip1 = Equipment.query.filter_by(uri="Bike-11").first()
         assert equip1.name == "Bike-1"
 
 
@@ -378,7 +378,9 @@ def test_user_columns(app):
     Tests user columns' restrictions. Name must be unique and mandatory.
     """
 
-    # Uniqueness of name
+    # Uniqueness of uri
+    #user_1 = _get_user(username="joonas", id=2)
+    #user_2 = _get_user(username="janne", id=2)
     user_1 = _get_user()
     user_2 = _get_user()
     with app.app_context():
@@ -389,7 +391,26 @@ def test_user_columns(app):
 
         db.session.rollback()
 
-    # Not null
+    # Uniqueness of name
+    user_1 = _get_user(username="joonas", id=1)
+    user_2 = _get_user(username="joonas", id=2)
+    with app.app_context():
+        db.session.add(user_1)
+        db.session.add(user_2)
+        with pytest.raises(IntegrityError):
+            db.session.commit()
+
+        db.session.rollback()
+
+    # Not null uri
+    # user = _get_user()
+    # with app.app_context():
+    #    user.uri = None
+    #    db.session.add(user)
+    #    with pytest.raises(IntegrityError):
+    #        db.session.commit()
+
+    # Not null name
     user = _get_user()
     with app.app_context():
         user.name = None
@@ -407,12 +428,41 @@ def test_equipment_columns(app):
     Date_added must be less than date_retired.
     """
 
+    # Uniqueness of uri
+    user_1 = _get_user(username="joonas", id=1)
+    user_2 = _get_user(username="janne", id=2)
+    equip_1 = _get_equipment(own=1)
+    equip_2 = _get_equipment(own=2)
+    with app.app_context():
+        db.session.add(user_1)
+        db.session.add(user_2)
+        db.session.add(equip_1)
+        db.session.add(equip_2)
+        with pytest.raises(IntegrityError):
+            db.session.commit()
+
+        db.session.rollback()
+
     # Uniqueness of name + owner
+    user_1 = _get_user(username="joonas", id=1)
+    user_2 = _get_user(username="janne", id=2)
     equip_1 = _get_equipment()
     equip_2 = _get_equipment()
     with app.app_context():
+        db.session.add(user_1)
+        db.session.add(user_2)
         db.session.add(equip_1)
         db.session.add(equip_2)
+        with pytest.raises(IntegrityError):
+            db.session.commit()
+
+        db.session.rollback()
+
+    # Not null uri
+    equipment = _get_equipment()
+    equipment.uri = None
+    with app.app_context():
+        db.session.add(equipment)
         with pytest.raises(IntegrityError):
             db.session.commit()
 
@@ -535,12 +585,36 @@ def test_component_columns(app):
     datetime and equipment_id accepts only numerical values.
     """
 
-    # Uniqueness of category
+    # Uniqueness of uri
+    # user_1 = _get_user(username="joonas", id=1)
+    # user_2 = _get_user(username="janne", id=2)
+    # equip_1 = _get_equipment(own=1)
+    # equip_2 = _get_equipment(own=2)
     component_1 = _get_component()
-    component_2 = _get_component()
+    component_2 = _get_component(ret=True)
     with app.app_context():
         db.session.add(component_1)
         db.session.add(component_2)
+        with pytest.raises(IntegrityError):
+            db.session.commit()
+
+        db.session.rollback()
+
+    component_1 = _get_component(ret=True)
+    component_2 = _get_component(ret=True)
+    with app.app_context():
+        db.session.add(component_1)
+        db.session.add(component_2)
+        with pytest.raises(IntegrityError):
+            db.session.commit()
+
+        db.session.rollback()
+
+    # Not null uri
+    component = _get_component()
+    component.uri = None
+    with app.app_context():
+        db.session.add(component)
         with pytest.raises(IntegrityError):
             db.session.commit()
 
@@ -633,12 +707,22 @@ def test_ride_columns(app):
     datetime only accepts datetime values.
     """
 
-    # Uniqueness of name
+    # Uniqueness of uri, name and equipment_id
     ride_1 = _get_ride()
     ride_2 = _get_ride()
     with app.app_context():
         db.session.add(ride_1)
         db.session.add(ride_2)
+        with pytest.raises(IntegrityError):
+            db.session.commit()
+
+        db.session.rollback()
+
+    # Not null uri
+    ride = _get_ride()
+    ride.uri = None
+    with app.app_context():
+        db.session.add(ride)
         with pytest.raises(IntegrityError):
             db.session.commit()
 
