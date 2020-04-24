@@ -17,3 +17,4 @@ build/
 
 *.db
 src/tests/~$API_tests_log.xlsx
+.coverage

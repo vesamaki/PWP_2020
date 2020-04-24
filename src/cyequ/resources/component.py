@@ -163,8 +163,8 @@ class ComponentItem(Resource):
             # In case of database error
             db.session.rollback()
             return create_error_response(409, "Already exists",
-                                         "Component of category '{}' already "
-                                         "exists."
+                                         "Unretired component of category"
+                                         " {} already exists."
                                          .format(request.json["category"])
                                          )
         return Response(status=204)
