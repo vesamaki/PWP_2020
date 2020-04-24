@@ -40,8 +40,8 @@ class Component(db.Model):
                                           name="_compo_in_equip_uc"), )
 
     id = db.Column(db.Integer, primary_key=True)
-    uri = db.Column(db.String(128), nullable=False, unique=True)
-    name = db.Column(db.String(64), nullable=True, unique=False)
+    uri = db.Column(db.String(128), nullable=True, unique=True)
+    name = db.Column(db.String(64), nullable=True)
     category = db.Column(db.String(64), nullable=False)
     brand = db.Column(db.String(64), nullable=False)
     model = db.Column(db.String(128), nullable=False)
@@ -86,7 +86,7 @@ class Ride(db.Model):
                       )
 
     id = db.Column(db.Integer, primary_key=True)
-    uri = db.Column(db.String(128), nullable=False, unique=True)
+    uri = db.Column(db.String(128), nullable=True, unique=True)
     name = db.Column(db.String(64), nullable=False)
     duration = db.Column(db.Integer, nullable=False)
     datetime = db.Column(db.DateTime, nullable=False)

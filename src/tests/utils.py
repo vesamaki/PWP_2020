@@ -313,7 +313,8 @@ def _get_equipment(cat="Mountain Bike", ret=False, own=1,
     return equipout
 
 
-def _get_component(cat="Fork", ret=False, equi=1, mod=False, id=1):
+def _get_component(cat="Fork", ret=False,
+                   equi=1, mod=False, id=1):
     '''
     Function used to set a component instance's data
     Used by test-functions

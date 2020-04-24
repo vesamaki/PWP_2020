@@ -14,7 +14,7 @@ from cyequ import db
 from cyequ.constants import MASON, EQUIPMENT_PROFILE, \
                             COMPONENT_PROFILE, LINK_RELATIONS_URL
 from cyequ.utils import EquipmentBuilder, ComponentBuilder, \
-                        create_error_response, convert_req_date, hashit
+                        create_error_response, convert_req_date
 from cyequ.models import User, Equipment, Component  # , Ride
 from cyequ.static.schemas.equipment_schema import equipment_schema
 from cyequ.static.schemas.component_schema import component_schema
