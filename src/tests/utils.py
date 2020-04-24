@@ -46,7 +46,7 @@ def _populate_db():
                            date_retired=datetime(2019, 12, 21, 11, 20, 30),
                            owner=1
                            )
-    component1 = Component(uri="Seat Post1",
+    component1 = Component(uri="Hissitolppa1",
                            name="Hissitolppa",
                            category="Seat Post",
                            brand="RockShox",
@@ -55,7 +55,7 @@ def _populate_db():
                            date_retired=datetime(9999, 12, 31, 23, 59, 59),
                            equipment_id=1
                            )
-    component2 = Component(uri="Rear Wheel2",
+    component2 = Component(uri="Takatalvikiekko2",
                            name="Takatalvikiekko",
                            category="Rear Wheel",
                            brand="Sram",
@@ -322,7 +322,8 @@ def _get_component(cat="Fork", ret=False,
 
     if mod:
         if ret:
-            compout = Component(category="{}".format(cat),
+            compout = Component(name="Component-{}".format(id),
+                                category="{}".format(cat),
                                 brand="Fox",
                                 model="34 Factory",
                                 date_added=datetime(2018, 11, 21, 11, 20, 30),
@@ -330,7 +331,8 @@ def _get_component(cat="Fork", ret=False,
                                 equipment_id=equi
                                 )
         else:
-            compout = Component(category="{}".format(cat),
+            compout = Component(name="Component-{}".format(id),
+                                category="{}".format(cat),
                                 brand="Fox",
                                 model="34 Factory",
                                 date_added=datetime(2018, 11, 21, 11, 20, 30),
@@ -340,6 +342,7 @@ def _get_component(cat="Fork", ret=False,
     else:
         if ret:
             compout = Component(uri="{}".format(cat) + str(id),
+                                name="Component-{}".format(id),
                                 category="{}".format(cat),
                                 brand="Fox",
                                 model="34 Factory",
@@ -349,6 +352,7 @@ def _get_component(cat="Fork", ret=False,
                                 )
         else:
             compout = Component(uri="{}".format(cat) + str(id),
+                                name="Component-{}".format(id),
                                 category="{}".format(cat),
                                 brand="Fox",
                                 model="34 Factory",

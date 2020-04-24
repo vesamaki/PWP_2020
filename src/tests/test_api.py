@@ -323,8 +323,9 @@ class TestEquipmentByUser(object):
         resp = client.post(self.resource_URL(), json=valid)
         assert resp.status_code == 201
         # Test Location header
-        header_URI = valid["name"].replace(" ", "%20")
-        assert resp.headers["Location"].endswith(self.resource_URL() + header_URI + "/")  # noqa: E501
+        header_URI = valid["name"].replace(" ", "%20") + "3"
+        assert resp.headers["Location"] \
+            .endswith(self.resource_URL() + header_URI + "/")  # noqa: E501
         # Follow location header and test response
         resp = client.get(resp.headers["Location"])
         assert resp.status_code == 200
@@ -348,12 +349,16 @@ class TestEquipmentItem(object):
     resource.
     '''
 
-    COMPONENT_URL = "/api/users/Joonas/all_equipment/Polkuaura/VauhtiHeijastin/"  # noqa: E501
+    COMPONENT_URL = "/api/users/Joonas1/all_equipment/" \
+                    "Polkuaura1/VauhtiHeijastin3/"
+
     @staticmethod
-    def resource_URL(user="Joonas", equipment="Polkuaura"):
-        return "/api/users/{}/all_equipment/{}/" \
+    def resource_URL(user="Joonas", equipment="Polkuaura", u_id=1, e_id=1):
+        return "/api/users/{}{}/all_equipment/{}{}/" \
                .format(user.replace(" ", "%20"),
-                       equipment.replace(" ", "%20")
+                       str(u_id),
+                       equipment.replace(" ", "%20"),
+                       str(e_id),
                        )
 
     def test_get(self, client):
@@ -391,7 +396,6 @@ class TestEquipmentItem(object):
                                    body,
                                    _get_component_json()
                                    )
-
         _check_control_get_method("self", client, body)
         _check_profile("profile", client, body, "equipment-profile")
         _check_control_put_method("edit", client, body, _get_equipment_json())
@@ -404,7 +408,6 @@ class TestEquipmentItem(object):
         assert body["items"][0]["date_added"] == "2019-11-21T11:20:30"
         assert body["items"][1]["date_added"] == "2019-11-21T11:20:30"
         assert body["items"][0]["date_retired"] == "2019-12-21T11:20:30"
-        assert body["items"][1]["date_retired"] is None
         for item in body["items"]:
             _check_control_get_method("self", client, item)
             _check_profile("profile", client, item, "component-profile")
@@ -425,7 +428,9 @@ class TestEquipmentItem(object):
         assert resp.status_code == 404
         # Test if equipment already retired
         valid = _get_component_json()
-        resp = client.post(self.resource_URL(equipment="Kisarassi"))
+        resp = client.post(self.resource_URL(equipment="Kisarassi", e_id=2),
+                           json=valid
+                           )
         # Test for unsupported media type (content-type header)
         resp = client.post(self.resource_URL(), data=json.dumps(valid))
         assert resp.status_code == 415
@@ -433,6 +438,9 @@ class TestEquipmentItem(object):
         resp = client.post(self.resource_URL(), json="invalid")
         assert resp.status_code == 400
         # Test missing required fields
+        valid.pop("name")
+        resp = client.post(self.resource_URL(), json=valid)
+        assert resp.status_code == 400
         valid.pop("category")
         resp = client.post(self.resource_URL(), json=valid)
         assert resp.status_code == 400
@@ -453,8 +461,9 @@ class TestEquipmentItem(object):
         resp = client.post(self.resource_URL(), json=valid)
         assert resp.status_code == 201
         # Test Location header
-        header_URI = valid["category"].replace(" ", "%20")
-        assert resp.headers["Location"].endswith(self.resource_URL() + header_URI + "/")  # noqa: E501
+        header_URI = valid["name"].replace(" ", "%20") + "3"
+        assert resp.headers["Location"] \
+            .endswith(self.resource_URL() + header_URI + "/")
         # Follow location header and test response
         resp = client.get(resp.headers["Location"])
         assert resp.status_code == 200
@@ -465,15 +474,12 @@ class TestEquipmentItem(object):
         assert body["brand"] == "BBB"
         assert body["model"] == "Aero Reflector"
         assert body["date_added"] == "2019-11-21T11:20:30"
-        assert body["date_retired"] is None
+        assert body["date_retired"] == "9999-12-31T23:59:59"
         assert body["equipment"] == "Polkuaura"
-        # POST again for 409. Fails, because no functioning
-        # unique constraint in place yet
-        # resp = client.post(self.resource_URL(), json=valid)
-        # assert resp.status_code == 409
-
+        # POST again for 409.
+        resp = client.post(self.resource_URL(), json=valid)
+        assert resp.status_code == 409
         # Test to add component to an existing, but retired category
-        # USELESS TEST IF ABOVE UNIQUE CONSTRAINT DOES NOT EXIST
         valid = _get_component_json(name="Takakesäkiekko",
                                     category="Rear Wheel",
                                     brand="DT Swiss",
@@ -490,7 +496,7 @@ class TestEquipmentItem(object):
                                     date_added="2019-10-22 11:20:30",
                                     date_retired="2020-01-22 11:20:30"
                                     )
-        resp = client.post(self.resource_URL(equipment="Kisarassi"),
+        resp = client.post(self.resource_URL(equipment="Kisarassi", e_id=2),
                            json=valid
                            )
         assert resp.status_code == 409
@@ -503,7 +509,7 @@ class TestEquipmentItem(object):
                                     date_added="2019-10-22 11:20:30",
                                     date_retired="2020-11-21 11:20:30"
                                     )
-        resp = client.post(self.resource_URL(equipment="Kisarassi"),
+        resp = client.post(self.resource_URL(equipment="Kisarassi", e_id=2),
                            json=valid
                            )
         assert resp.status_code == 409
@@ -555,10 +561,9 @@ class TestEquipmentItem(object):
         valid = _get_equipment_json()
         resp = client.put(self.resource_URL(), json=valid)
         assert resp.status_code == 204
-        # Test new URI exists
-        resp = client.get(self.resource_URL(equipment=valid["name"]))
-        assert resp.status_code == 200
         # See if changes exist
+        resp = client.get(self.resource_URL())
+        assert resp.status_code == 200
         body = json.loads(resp.data)
         assert body["name"] == "Hyppykeppi"
         assert body["category"] == "Mountain Bike"
@@ -569,26 +574,31 @@ class TestEquipmentItem(object):
         assert body["user"] == "Joonas"
         # Test PUT for existing equipment for 409
         valid = _get_equipment_json(name="Kisarassi")
-        resp = client.put(self.resource_URL(equipment="Hyppykeppi"),
+        resp = client.put(self.resource_URL(),
                           json=valid
                           )
         assert resp.status_code == 409
         # Test modifying new date_added to the future of old date added
         # on equiment with components associated
         valid = _get_equipment_json(date_retired="2019-09-21 11:20:30")
-        resp = client.put(self.resource_URL(equipment="Hyppykeppi"),
+        resp = client.put(self.resource_URL(),
                           json=valid
                           )
         assert resp.status_code == 409
+        body = json.loads(resp.data)
+        assert body["@error"]["@message"] == "Inconsistent dates"
+#        assert str(body["@error"]["@messages"]) == "[\'No user was " \
+#                                                   "found with URI {}\']" \
+#                                                   .format("Jaana1")
         # Test that retiring equipment also retires associated components
-        valid = _get_equipment_json(date_retired="2019-12-21 11:20:30")
-        client.put(self.resource_URL(equipment="Hyppykeppi"),
+        valid = _get_equipment_json(date_retired="2019-12-21 11:20:40")
+        client.put(self.resource_URL(),
                    json=valid
                    )
-        resp = client.get(self.resource_URL(equipment="Hyppykeppi"))
+        resp = client.get(self.resource_URL())
         body = json.loads(resp.data)
         for item in body["items"]:
-            assert item["date_retired"] == "2019-12-21T11:20:30"
+            assert item["date_retired"] == "2019-12-21T11:20:40"
 
     def test_delete(self, client):
         """
@@ -620,17 +630,23 @@ class TestComponentItem(object):
     resource.
     '''
 
-    EQUIPMENT_URL = "/api/users/Joonas/all_equipment/Polkuaura/"
-    # RESOURCE_URL = "/api/users/Joonas/all_equipment/"
+    EQUIPMENT_URL = "/api/users/Joonas1/all_equipment/Polkuaura1/"
+
     @staticmethod
     def resource_URL(user="Joonas",
+                     u_id=1,
                      equipment="Polkuaura",
-                     component="Seat Post"
-                     ):
-        return "/api/users/{}/all_equipment/{}/{}/" \
+                     e_id=1,
+                     component="Hissitolppa",
+                     c_id=1):
+        return "/api/users/{}{}/all_equipment/{}{}/{}{}/" \
                .format(user.replace(" ", "%20"),
+                       str(u_id),
                        equipment.replace(" ", "%20"),
-                       component.replace(" ", "%20"))
+                       str(e_id),
+                       component.replace(" ", "%20"),
+                       str(c_id)
+                       )
 
     def test_get(self, client):
         '''
@@ -642,9 +658,24 @@ class TestComponentItem(object):
         # Invalid routes
         resp = client.get(self.resource_URL(user="Jaana"))
         assert resp.status_code == 404
+        body = json.loads(resp.data)
+        assert body["@error"]["@message"] == "Not found"
+        assert str(body["@error"]["@messages"]) == "[\'No user was " \
+                                                   "found with URI {}\']" \
+                                                   .format("Jaana1")
         resp = client.get(self.resource_URL(equipment="Kolmipyörä"))
+        body = json.loads(resp.data)
         assert resp.status_code == 404
+        assert body["@error"]["@message"] == "Not found"
+        assert str(body["@error"]["@messages"]) == "[\'No equipment was " \
+                                                   "found with URI {}\']" \
+                                                   .format("Kolmipyörä1")
         resp = client.get(self.resource_URL(component="Soittokello"))
+        body = json.loads(resp.data)
+        assert body["@error"]["@message"] == "Not found"
+        assert str(body["@error"]["@messages"]) == "[\'No component was " \
+                                                   "found with URI {}\']" \
+                                                   .format("Soittokello1")
         assert resp.status_code == 404
         # Test valid route
         resp = client.get(self.resource_URL())
@@ -656,7 +687,7 @@ class TestComponentItem(object):
         assert body["brand"] == "RockShox"
         assert body["model"] == "Reverb B1"
         assert body["date_added"] == "2019-11-21T11:20:30"
-        assert body["date_retired"] is None
+        assert body["date_retired"] == "9999-12-31T23:59:59"
         assert body["equipment"] == "Polkuaura"
         # Test controls
         _check_namespace(client, body)
@@ -666,7 +697,9 @@ class TestComponentItem(object):
         _check_profile("profile", client, body, "component-profile")
         _check_control_put_method("edit", client, body, _get_component_json())
         # Get new body for DELETE control test after PUT
-        resp = client.get(self.resource_URL(component="Rear Wheel"))
+        resp = client.get(self.resource_URL(component="Takatalvikiekko",
+                                            c_id=2)
+                          )
         body = json.loads(resp.data)
         _check_control_delete_method("cyequ:delete", client, body)
 
@@ -692,6 +725,9 @@ class TestComponentItem(object):
         resp = client.put(self.resource_URL(), json="invalid")
         assert resp.status_code == 400
         # Test missing required fields
+        valid.pop("name")
+        resp = client.put(self.resource_URL(), json=valid)
+        assert resp.status_code == 400
         valid.pop("category")
         resp = client.put(self.resource_URL(), json=valid)
         assert resp.status_code == 400
@@ -715,34 +751,47 @@ class TestComponentItem(object):
         valid = _get_component_json()
         resp = client.put(self.resource_URL(), json=valid)
         assert resp.status_code == 204
-        # Test new URI exists
-        resp = client.get(self.resource_URL(component=valid["category"]
-                                            .replace(" ", "%20")
-                                            )
-                          )
-        assert resp.status_code == 200
         # See if changes exist
+        resp = client.get(self.resource_URL())
+        assert resp.status_code == 200
         body = json.loads(resp.data)
         assert body["name"] == "VauhtiHeijastin"
         assert body["category"] == "Front Reflector"
         assert body["brand"] == "BBB"
         assert body["model"] == "Aero Reflector"
         assert body["date_added"] == "2019-11-21T11:20:30"
-        assert body["date_retired"] is None
+        assert body["date_retired"] == "9999-12-31T23:59:59"
         assert body["equipment"] == "Polkuaura"
-        # Test PUT for existing equipment for 409. Fails,
-        # because no functioning unique constraint in place yet
-        # valid = _get_component_json(name="Takatalvikiekko")
-        # resp = client.put(self.resource_URL(component="Front Reflector"),
-        #                   json=valid
-        #                   )
-        # assert resp.status_code == 409
-        # Test component date_added < equipment date_added
-        valid = _get_component_json(date_added="2019-09-21 11:20:30")
-        resp = client.put(self.resource_URL(component="Front Reflector"),
+        # Test PUT for existing unretired component of same category for 409.
+        # First POST a new unretired component of new category
+        valid = _get_component_json(name="TestComponent",
+                                    category="Test Category"
+                                    )
+        resp = client.post(self.EQUIPMENT_URL, json=valid)
+        # Make sure it's added
+        assert resp.status_code == 201
+        # Do test
+        valid = _get_component_json(category="Test Category")
+        resp = client.put(self.resource_URL(),
                           json=valid
                           )
         assert resp.status_code == 409
+        # Test component date_added < equipment date_added
+        valid = _get_component_json(date_added="2019-09-21 11:20:30")
+        resp = client.put(self.resource_URL(), json=valid)
+        assert resp.status_code == 409
+        # Test retiring a component of a already retired equipment
+        # First retire equipment Polkuaura1
+        valid = _get_equipment_json(name="Polkuaura",
+                                    category="Mountain Bike",
+                                    brand="Kona",
+                                    model="Hei Hei",
+                                    date_added="2019-11-21 11:20:30",
+                                    date_retired="2020-01-21 11:20:30",
+                                    )
+        resp = client.put(self.EQUIPMENT_URL, json=valid)
+        # Then test reretiring component
+        valid = _get_component_json(date_retired="2020-02-21 11:20:30")
 
     def test_delete(self, client):
         """

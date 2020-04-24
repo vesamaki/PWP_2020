@@ -83,16 +83,16 @@ class UserCollection(Resource):
         db_user = User.query.filter_by(name=request.json["name"]).first()
         # Create URI for user
         db_user.uri = db_user.name + str(db_user.id)
-        try:
-            db.session.commit()
-        except IntegrityError:
-            # In case of database error
-            db.session.rollback()
-            return create_error_response(500, "Internal Server Error",
-                                         "The server encountered an "
-                                         "unexpected condition that prevented"
-                                         " it from fulfilling the request."
-                                         )
+#        try:
+        db.session.commit()
+#        except IntegrityError:
+#            # In case of database error
+#            db.session.rollback()
+#            return create_error_response(500, "Internal Server Error",
+#                                         "The server encountered an "
+#                                         "unexpected condition that prevented"
+#                                         " it from fulfilling the request."
+#                                         )
         # Respond with location of new resource
         return Response(status=201,
                         headers={"Location":

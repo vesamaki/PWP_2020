@@ -41,7 +41,7 @@ class Component(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     uri = db.Column(db.String(128), nullable=True, unique=True)
-    name = db.Column(db.String(64), nullable=True)
+    name = db.Column(db.String(64), nullable=False)
     category = db.Column(db.String(64), nullable=False)
     brand = db.Column(db.String(64), nullable=False)
     model = db.Column(db.String(128), nullable=False)

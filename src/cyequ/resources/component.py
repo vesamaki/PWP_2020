@@ -97,14 +97,14 @@ class ComponentItem(Resource):
                                          "document", str(err)
                                          )
         # Find user by name in database. If not found, respond with error 404
-        if User.query.filter_by(hashURI=user).first() is None:
+        if User.query.filter_by(uri=user).first() is None:
             return create_error_response(404, "Not found",
                                          "No user was found with URI {}"
                                          .format(user)
                                          )
         # Find equipment by name in database.
         # If not found, respond with error 404
-        db_equip = Equipment.query.filter_by(hashURI=equipment).first()
+        db_equip = Equipment.query.filter_by(uri=equipment).first()
         if db_equip is None:
             return create_error_response(404, "Not found",
                                          "No equipment was found with URI {}"
@@ -112,7 +112,7 @@ class ComponentItem(Resource):
                                          )
         # Find component by category in database.
         # If not found, respond with error 404
-        db_comp = Component.query.filter_by(hashURI=component).first()
+        db_comp = Component.query.filter_by(uri=component).first()
         if db_comp is None:
             return create_error_response(404, "Not found",
                                          "No component was found with "
@@ -155,7 +155,13 @@ class ComponentItem(Resource):
             # Check if equipment is already retired
             # Components are retired, when equipment is retired
             # Cannot re- or unretire components of retired equipment
-            if db_equip.date_retired is None:
+            elif db_equip.date_retired is not None:
+                return create_error_response(409, "Not allowed",
+                                             "Cannot reretire components of a"
+                                             " retired equipment {}"
+                                             .format(db_equip.uri)
+                                             )
+            else:
                 db_comp.date_retired = p_date_retired
         try:
             db.session.commit()
@@ -175,21 +181,21 @@ class ComponentItem(Resource):
         '''
 
         # Find user by name in database. If not found, respond with error 404
-        if User.query.filter_by(hashURI=user).first() is None:
+        if User.query.filter_by(uri=user).first() is None:
             return create_error_response(404, "Not found",
                                          "No user was found with URI {}"
                                          .format(user)
                                          )
         # Find equipment by name in database.
         # If not found, respond with error 404
-        if Equipment.query.filter_by(hashURI=equipment).first() is None:
+        if Equipment.query.filter_by(uri=equipment).first() is None:
             return create_error_response(404, "Not found",
                                          "No equipment was found with URI {}"
                                          .format(equipment)
                                          )
         # Find component by category in database.
         # If not found, respond with error 404
-        db_comp = Component.query.filter_by(hashURI=component).first()
+        db_comp = Component.query.filter_by(uri=component).first()
         if db_comp is None:
             return create_error_response(404, "Not found",
                                          "No component was found with "
@@ -197,15 +203,15 @@ class ComponentItem(Resource):
                                          .format(component)
                                          )
         # Delete equipment
-        try:
-            db.session.delete(db_comp)
-            db.session.commit()
-        except IntegrityError:
-            # In case of database error
-            db.session.rollback()
-            return create_error_response(500, "Internal Server Error",
-                                         "The server encountered an "
-                                         "unexpected condition that prevented"
-                                         " it from fulfilling the request."
-                                         )
+#        try:
+        db.session.delete(db_comp)
+        db.session.commit()
+#        except IntegrityError:
+#            # In case of database error
+#            db.session.rollback()
+#            return create_error_response(500, "Internal Server Error",
+#                                         "The server encountered an "
+#                                         "unexpected condition that prevented"
+#                                         " it from fulfilling the request."
+#                                         )
         return Response(status=204)

@@ -74,3 +74,6 @@ API-tests are in .\\tests\\api_test.py.
 Using this sort of testing does not require Flask to run, or even data to exist in the database.  
 Change directory to your project folder. Both tests can be run with command:  
 __pytest ./src/tests/ --cov=./src/cuequ/ --cov-report term-missing__
+
+**NOTE ON TEST COVERAGE**  
+For some reason, test_api.py tests won't cover many of the error responses even though they are asserted. I.e. test_api.py lines test 197-203 should cover user.py missing line 155 of coverage report. Most of the missing lines have the same problem, though I didn't write tests for all after noticing the coverage behavior of above example.

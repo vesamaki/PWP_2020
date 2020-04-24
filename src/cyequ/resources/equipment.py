@@ -7,7 +7,7 @@ from flask import request, Response, json, url_for
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
 from jsonschema import validate, ValidationError
-
+from datetime import datetime
 
 # Project imports
 from cyequ import db
@@ -127,16 +127,16 @@ class EquipmentByUser(Resource):
         db_equip = Equipment.query.filter_by(name=request.json["name"]).first()
         # Create URI for user
         db_equip.uri = db_equip.name + str(db_equip.id)
-        try:
-            db.session.commit()
-        except IntegrityError:
-            # In case of database error
-            db.session.rollback()
-            return create_error_response(500, "Internal Server Error",
-                                         "The server encountered an "
-                                         "unexpected condition that prevented"
-                                         " it from fulfilling the request."
-                                         )
+#        try:
+        db.session.commit()
+#        except IntegrityError:
+#            # In case of database error
+#            db.session.rollback()
+#            return create_error_response(500, "Internal Server Error",
+#                                         "The server encountered an "
+#                                         "unexpected condition that prevented"
+#                                         " it from fulfilling the request."
+#                                         )
         # Respond with location of new resource
         return Response(status=201,
                         headers={"Location":
@@ -187,7 +187,7 @@ class EquipmentItem(Resource):
         # controls.
         for component in db_equip.hasCompos:
             # If component is in active service, don't attach retired_date
-            if component.date_retired == "9999-12-31T23:59:59":
+            if component.date_retired == datetime(9999, 12, 31, 23, 59, 59):
                 comp = ComponentBuilder(name=component.name,
                                         category=component.category,
                                         brand=component.brand,
@@ -329,17 +329,17 @@ class EquipmentItem(Resource):
                                             date_retired=p_date_retired
                                             ).first()
         # Create URI for user
-        db_comp.uri = db_comp.category + str(db_comp.id)
-        try:
-            db.session.commit()
-        except IntegrityError:
-            # In case of database error
-            db.session.rollback()
-            return create_error_response(500, "Internal Server Error",
-                                         "The server encountered an "
-                                         "unexpected condition that prevented"
-                                         " it from fulfilling the request."
-                                         )
+        db_comp.uri = db_comp.name + str(db_comp.id)
+#        try:
+        db.session.commit()
+#        except IntegrityError:
+#            # In case of database error
+#            db.session.rollback()
+#            return create_error_response(500, "Internal Server Error",
+#                                         "The server encountered an "
+#                                         "unexpected condition that prevented"
+#                                         " it from fulfilling the request."
+#                                         )
         # Respond with location of new resource
         return Response(status=201,
                         headers={"Location":
@@ -457,15 +457,15 @@ class EquipmentItem(Resource):
                                          .format(equipment)
                                          )
         # Delete equipment
-        try:
-            db.session.delete(db_equip)
-            db.session.commit()
-        except IntegrityError:
-            # In case of database error
-            db.session.rollback()
-            return create_error_response(500, "Internal Server Error",
-                                         "The server encountered an "
-                                         "unexpected condition that prevented"
-                                         " it from fulfilling the request."
-                                         )
+#        try:
+        db.session.delete(db_equip)
+        db.session.commit()
+#        except IntegrityError:
+#            # In case of database error
+#            db.session.rollback()
+#            return create_error_response(500, "Internal Server Error",
+#                                         "The server encountered an "
+#                                         "unexpected condition that prevented"
+#                                         " it from fulfilling the request."
+#                                         )
         return Response(status=204)

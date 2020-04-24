@@ -588,7 +588,7 @@ def test_component_columns(app):
 
         db.session.rollback()
 
-    # Not null category
+    # Not null name
     component = _get_component()
     component.name = None
     with app.app_context():
