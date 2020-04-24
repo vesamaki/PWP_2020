@@ -14,7 +14,7 @@ from cyequ import db
 from cyequ.constants import MASON, EQUIPMENT_PROFILE, \
                             COMPONENT_PROFILE, LINK_RELATIONS_URL
 from cyequ.utils import EquipmentBuilder, ComponentBuilder, \
-                        create_error_response, convert_req_date
+                        create_error_response, convert_req_date, hashit
 from cyequ.models import User, Equipment, Component  # , Ride
 from cyequ.static.schemas.equipment_schema import equipment_schema
 from cyequ.static.schemas.component_schema import component_schema
@@ -32,10 +32,10 @@ class EquipmentByUser(Resource):
         '''
 
         # Find user by name in database. If not found, respond with error 404
-        db_user = User.query.filter_by(name=user).first()
+        db_user = User.query.filter_by(uri=user).first()
         if db_user is None:
             return create_error_response(404, "Not found",
-                                         "No user was found with name {}"
+                                         "No user was found with URI {}"
                                          .format(user)
                                          )
         # Instantiate message body
@@ -55,7 +55,7 @@ class EquipmentByUser(Resource):
             # Add controls to each item
             equip.add_control("self", url_for("api.equipmentitem",
                                               user=user,
-                                              equipment=equipment.name
+                                              equipment=equipment.uri
                                               )
                               )
             equip.add_control("profile", EQUIPMENT_PROFILE)
@@ -81,10 +81,10 @@ class EquipmentByUser(Resource):
                                          "document", str(err)
                                          )
         # Find user by name in database. If not found, respond with error 404
-        db_user = User.query.filter_by(name=user).first()
+        db_user = User.query.filter_by(uri=user).first()
         if db_user is None:
             return create_error_response(404, "Not found",
-                                         "No user was found with name {}"
+                                         "No user was found with URI {}"
                                          .format(user)
                                          )
         # Convert %Y-%m-%d %H:%M:%S dates to Python datetime format
@@ -120,15 +120,29 @@ class EquipmentByUser(Resource):
             return create_error_response(409,
                                          "Already exists",
                                          "Equipment with name '{}' already"
-                                         " exists."
+                                         " exists for this user."
                                          .format(request.json["name"])
+                                         )
+        # Find new equipment by name in database.
+        db_equip = Equipment.query.filter_by(name=request.json["name"]).first()
+        # Create URI for user
+        db_equip.uri = db_equip.name + str(db_equip.id)
+        try:
+            db.session.commit()
+        except IntegrityError:
+            # In case of database error
+            db.session.rollback()
+            return create_error_response(500, "Internal Server Error",
+                                         "The server encountered an "
+                                         "unexpected condition that prevented"
+                                         " it from fulfilling the request."
                                          )
         # Respond with location of new resource
         return Response(status=201,
                         headers={"Location":
                                  url_for("api.equipmentitem",
                                          user=user,
-                                         equipment=request.json["name"]
+                                         equipment=db_equip.uri
                                          )
                                  }
                         )
@@ -145,18 +159,18 @@ class EquipmentItem(Resource):
         '''
 
         # Find user by name in database. If not found, respond with error 404
-        db_user = User.query.filter_by(name=user).first()
+        db_user = User.query.filter_by(uri=user).first()
         if db_user is None:
             return create_error_response(404, "Not found",
-                                         "No user was found with name {}"
+                                         "No user was found with URI {}"
                                          .format(user)
                                          )
         # Find equipment by name in database.
         # If not found, respond with error 404
-        db_equip = Equipment.query.filter_by(name=equipment).first()
+        db_equip = Equipment.query.filter_by(uri=equipment).first()
         if db_equip is None:
             return create_error_response(404, "Not found",
-                                         "No equipment was found with name {}"
+                                         "No equipment was found with URI {}"
                                          .format(equipment)
                                          )
         # Instantiate response message body
@@ -172,18 +186,27 @@ class EquipmentItem(Resource):
         # Loop through all users in database and build each item with data and
         # controls.
         for component in db_equip.hasCompos:
-            comp = ComponentBuilder(name=component.name,
-                                    category=component.category,
-                                    brand=component.brand,
-                                    model=component.brand,
-                                    date_added=component.date_added,
-                                    date_retired=component.date_retired
-                                    )
+            # If component is in active service, don't attach retired_date
+            if component.date_retired == "9999-12-31T23:59:59":
+                comp = ComponentBuilder(name=component.name,
+                                        category=component.category,
+                                        brand=component.brand,
+                                        model=component.brand,
+                                        date_added=component.date_added
+                                        )
+            else:
+                comp = ComponentBuilder(name=component.name,
+                                        category=component.category,
+                                        brand=component.brand,
+                                        model=component.brand,
+                                        date_added=component.date_added,
+                                        date_retired=component.date_retired
+                                        )
             # Add controls to each item
             comp.add_control("self", url_for("api.componentitem",
                                              user=user,
                                              equipment=equipment,
-                                             component=component.category
+                                             component=component.uri
                                              )
                              )
             comp.add_control("profile", COMPONENT_PROFILE)
@@ -197,7 +220,9 @@ class EquipmentItem(Resource):
                                          )
                          )
         body.add_control("profile", EQUIPMENT_PROFILE)
-        body.add_control("owner", url_for("api.equipmentbyuser", user=user))
+        body.add_control("cyequ:owner",
+                         url_for("api.equipmentbyuser", user=user)
+                         )
         body.add_control_all_users()
         body.add_control_all_equipment(user)
         body.add_control_edit_equipment(user, equipment)
@@ -222,26 +247,26 @@ class EquipmentItem(Resource):
                                          "document", str(err)
                                          )
         # Find user by name in database. If not found, respond with error 404
-        if User.query.filter_by(name=user).first() is None:
+        if User.query.filter_by(uri=user).first() is None:
             return create_error_response(404, "Not found",
-                                         "No user was found with name {}"
+                                         "No user was found with URI {}"
                                          .format(user)
                                          )
         # Find equipment by name in database.
         # If not found, respond with error 404
-        db_equip = Equipment.query.filter_by(name=equipment).first()
+        db_equip = Equipment.query.filter_by(uri=equipment).first()
         if db_equip is None:
             return create_error_response(404, "Not found",
-                                         "No equipment was found with name {}"
+                                         "No equipment was found with URI {}"
                                          .format(equipment)
                                          )
         # Check if equipment is already retired
         if db_equip.date_retired is not None:
             return create_error_response(409,
                                          "Already retired",
-                                         "Equipment of name '{}' is retired."
+                                         "Equipment of URI '{}' is retired."
                                          " Cannot add component {}."
-                                         .format(db_equip.name,
+                                         .format(db_equip.uri,
                                                  request.json["category"]
                                                  )
                                          )
@@ -261,7 +286,6 @@ class EquipmentItem(Resource):
                                          )
         # Check if date_retired given and convert
         p_date_retired = convert_req_date(request.json.get("date_retired"))
-        # if request.json.get("date_retired") is not None:
         if p_date_retired is not None:
             # if request.json["date_added"] >= request.json["date_retired"]:  # noqa: E501
             if p_date_added >= p_date_retired:
@@ -273,6 +297,10 @@ class EquipmentItem(Resource):
                                                      p_date_added
                                                      )
                                              )
+        else:
+            # If not given, set to faaar in the future.
+            # Meaning component is currently installed to equipment
+            p_date_retired = convert_req_date("9999-12-31 23:59:59")
         # Add a new component to db for equipment
         new_comp = Component(name=request.json["name"],
                              category=request.json["category"],
@@ -296,13 +324,29 @@ class EquipmentItem(Resource):
                                          " '{}' already exists."
                                          .format(request.json["category"])
                                          )
+        # Find new component by category & date_retired in database.
+        db_comp = Component.query.filter_by(category=request.json["category"],
+                                            date_retired=p_date_retired
+                                            ).first()
+        # Create URI for user
+        db_comp.uri = db_comp.category + str(db_comp.id)
+        try:
+            db.session.commit()
+        except IntegrityError:
+            # In case of database error
+            db.session.rollback()
+            return create_error_response(500, "Internal Server Error",
+                                         "The server encountered an "
+                                         "unexpected condition that prevented"
+                                         " it from fulfilling the request."
+                                         )
         # Respond with location of new resource
         return Response(status=201,
                         headers={"Location":
                                  url_for("api.componentitem",
                                          user=user,
                                          equipment=equipment,
-                                         component=request.json["category"]
+                                         component=db_comp.uri
                                          )
                                  }
                         )
@@ -325,17 +369,17 @@ class EquipmentItem(Resource):
                                          "document", str(err)
                                          )
         # Find user by name in database. If not found, respond with error 404
-        if User.query.filter_by(name=user).first() is None:
+        if User.query.filter_by(uri=user).first() is None:
             return create_error_response(404, "Not found",
-                                         "No user was found with name {}"
+                                         "No user was found with URI {}"
                                          .format(user)
                                          )
         # Find equipment by name in database.
         # If not found, respond with error 404
-        db_equip = Equipment.query.filter_by(name=equipment).first()
+        db_equip = Equipment.query.filter_by(uri=equipment).first()
         if db_equip is None:
             return create_error_response(404, "Not found",
-                                         "No equipment was found with name {}"
+                                         "No equipment was found with URI {}"
                                          .format(equipment)
                                          )
         # Convert %Y-%m-%d %H:%M:%S dates to Python datetime format
@@ -388,7 +432,8 @@ class EquipmentItem(Resource):
             db.session.rollback()
             return create_error_response(409, "Already exists",
                                          "Equipment with name '{}' already "
-                                         "exists.".format(request.json["name"])
+                                         "exists for user."
+                                         .format(request.json["name"])
                                          )
         return Response(status=204)
 
@@ -398,17 +443,17 @@ class EquipmentItem(Resource):
         '''
 
         # Find user by name in database. If not found, respond with error 404
-        if User.query.filter_by(name=user).first() is None:
+        if User.query.filter_by(uri=user).first() is None:
             return create_error_response(404, "Not found",
-                                         "No user was found with name {}"
+                                         "No user was found with URI {}"
                                          .format(user)
                                          )
         # Find equipment by name in database.
         # If not found, respond with error 404
-        db_equip = Equipment.query.filter_by(name=equipment).first()
+        db_equip = Equipment.query.filter_by(uri=equipment).first()
         if db_equip is None:
             return create_error_response(404, "Not found",
-                                         "No equipment was found with name {}"
+                                         "No equipment was found with URI {}"
                                          .format(equipment)
                                          )
         # Delete equipment

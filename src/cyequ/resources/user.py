@@ -36,11 +36,13 @@ class UserCollection(Resource):
         # Loop through all users in database and build each item with data and
         # controls.
         for db_user in User.query.all():
-            usr = UserBuilder(
-                name=db_user.name
-            )
+            usr = UserBuilder(name=db_user.name)
             # Add controls to each item
-            usr.add_control("self", url_for("api.useritem", user=db_user.name))
+            usr.add_control("self",
+                            url_for("api.useritem",
+                                    user=db_user.uri
+                                    )
+                            )
             usr.add_control("profile", USER_PROFILE)
             # Append each item to items-list of response body
             body["items"].append(usr)
@@ -64,9 +66,7 @@ class UserCollection(Resource):
                                          "document", str(err)
                                          )
         # Add user to db
-        user = User(
-            name=request.json["name"]
-        )
+        user = User(name=request.json["name"])
         try:
             db.session.add(user)
             db.session.commit()
@@ -79,10 +79,24 @@ class UserCollection(Resource):
                                          " exists."
                                          .format(request.json["name"])
                                          )
+        # Find user by name in database.
+        db_user = User.query.filter_by(name=request.json["name"]).first()
+        # Create URI for user
+        db_user.uri = db_user.name + str(db_user.id)
+        try:
+            db.session.commit()
+        except IntegrityError:
+            # In case of database error
+            db.session.rollback()
+            return create_error_response(500, "Internal Server Error",
+                                         "The server encountered an "
+                                         "unexpected condition that prevented"
+                                         " it from fulfilling the request."
+                                         )
         # Respond with location of new resource
         return Response(status=201,
                         headers={"Location":
-                                 url_for("api.useritem", user=user.name)
+                                 url_for("api.useritem", user=db_user.uri)
                                  }
                         )
 
@@ -98,10 +112,10 @@ class UserItem(Resource):
         '''
 
         # Find user by name in database. If not found, respond with error 404
-        db_user = User.query.filter_by(name=user).first()
+        db_user = User.query.filter_by(uri=user).first()
         if db_user is None:
             return create_error_response(404, "Not found",
-                                         "No user was found with name {}"
+                                         "No user was found with URI {}"
                                          .format(user)
                                          )
         # Instantiate response message body
@@ -136,10 +150,10 @@ class UserItem(Resource):
                                          "document", str(err)
                                          )
         # Find user by name in database. If not found, respond with error 404
-        db_user = User.query.filter_by(name=user).first()
+        db_user = User.query.filter_by(uri=user).first()
         if db_user is None:
             return create_error_response(404, "Not found",
-                                         "No user was found with name {}"
+                                         "No user was found with URI {}"
                                          .format(user)
                                          )
         # Update user data
@@ -162,10 +176,10 @@ class UserItem(Resource):
 #        '''
 #
 #        # Find user by name in database. If not found, respond with error 404
-#        db_user = User.query.filter_by(name=user).first()
+#        db_user = User.query.filter_by(name=uri).first()
 #        if db_user is None:
 #            return create_error_response(404, "Not found",
-#                                         "No user was found with name {}"
+#                                         "No user was found with URI {}"
 #                                         .format(user)
 #                                         )
 #         # Delete user

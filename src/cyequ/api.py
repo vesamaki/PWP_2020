@@ -62,7 +62,7 @@ def redirect_to_apiary_err_prof():
     return redirect(APIARY_URL + "error-profile")
 
 
-# Registering resource routes - Untested
+# Registering resource routes - DONE
 api.add_resource(Entry, "/api/")  # DONE
 api.add_resource(UserCollection, "/api/users/")  # DONE
 api.add_resource(UserItem, "/api/users/<user>/")
