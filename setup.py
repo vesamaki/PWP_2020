@@ -19,6 +19,7 @@ setup(
                         "pytest>=5.4.1",
                         "pytest-cov>=2.8.1",
                         "ipython>=7.13.0",
-                        "ipython-genutils>=0.2.0"
+                        "ipython-genutils>=0.2.0",
+                        "requests>=2.23.0"
                         ]
       )
