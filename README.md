@@ -59,8 +59,8 @@ __pip install -e .__
 
 #### Running Flask ####  
 On Windows set the environment variable FLASK_APP to point to project package. This can be done in command prompt, by browsing to the your project folder and typing command:  
-set FLASK_APP=cyequ  
-set FLASK_ENV=development
+__set FLASK_APP=cyequ__  
+__set FLASK_ENV=development__  
 
 Setup the database:  
 __flask init-db__
