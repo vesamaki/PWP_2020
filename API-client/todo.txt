@@ -1,0 +1,9 @@
+NEXT:
+
+FIX profile link relation
+DEBUG post_resource()
+WORK ON put_resource() (copy from POST)
+
+Figure out app routing in case of error.
+
+Reformat printing of Resource items link relation.

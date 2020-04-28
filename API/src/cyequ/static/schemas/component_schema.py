@@ -10,6 +10,7 @@ def component_schema():
     '''
 
     schema = {
+        "title": "Component schema",
         "type": "object",
         "required": ["name", "category", "brand", "model", "date_added"]
     }
@@ -29,13 +30,13 @@ def component_schema():
     props["brand"] = {
         "description": "The brand-name of the manufacturer",
         "type": "string",
-        'minLength': 1,
+        'minLength': 2,
         'maxLength': 64
     }
     props["model"] = {
         "description": "The model-name given by the manufacturer",
         "type": "string",
-        'minLength': 1,
+        'minLength': 2,
         'maxLength': 128
     }
     props["date_added"] = {

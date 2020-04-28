@@ -10,6 +10,7 @@ def user_schema():
     '''
 
     schema = {
+        "title": "User schema",
         "type": "object",
         "required": ["name"]
     }

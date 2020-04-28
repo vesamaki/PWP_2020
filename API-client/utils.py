@@ -4,6 +4,7 @@ This module provides utility functions for the API-client
 
 import requests
 import json
+import re
 from json import JSONDecodeError
 
 
@@ -123,31 +124,31 @@ def process_body(body):
         body_copy.pop("items")
     except KeyError:
         pass
-    # body_copy = [val for val in body_copy if val in ["@namespaces", "@controls", "items"]]  # noqa: E501
     # Print the response base data, if any
     if body_copy.keys():
         print("\r\nResource data:")
     for key in body_copy.keys():
-        print("{}: {}".format(key, body_copy[key]))
+        print("\t{}: {}".format(key, body_copy[key]))
     # Then process and print available @controls for this resource
     # For our RESTful API, @controls should always be included in response body
     print("\r\nControls available with this resource: ")
     for ctrl in body["@controls"].keys():
-        print("Link relation: {}".format(ctrl), end="")
+        print("Link relation - name: {}".format(ctrl), end="")
         for attr in body["@controls"][ctrl]:
             if attr not in ["schema"]:
-                print("\t", end="")
-                print("{}: {}".format(attr, body["@controls"][ctrl][attr]),
-                      end=""
-                      )
-        print("")
-    # print("\r\n", end="")
+                if attr not in ["profile"]:
+                    print("\n\t\t{}: {}".format(attr,
+                                                body["@controls"][ctrl][attr]
+                                                ),
+                          end=""
+                          )
+        print("\n")
     # Process items list if included
     # Since the items' list could be very long, process and print any items
     # included in response as the last part
     if "items" in body:
+        print("\r\nResource's items:")
         for i, val in enumerate(body["items"]):
-            print("\r\nResources items:")
             print("[{}]".format(i+1), end="")
             for key in val.keys():
                 # Print data of each item
@@ -157,8 +158,16 @@ def process_body(body):
                 else:
                     for ctrl in body["items"][i][key].keys():
                         if ctrl == "self":
-                            print("\tLink relation: {}\thref: {}"
+                            href_list = body["items"][i][key][ctrl]["href"] \
+                                        .split("/")
+                            # Match kwrd to second last.
+                            # The last is "" (empty string) from href-
+                            # split method.
+                            kwrd = href_list[-2]
+                            print("\tLink relation - name: "
+                                  "{}\tURI: {}\thref: {}"
                                   .format(ctrl,
+                                          kwrd,
                                           body["items"][i][key][ctrl]["href"]
                                           )
                                   )
@@ -168,10 +177,8 @@ def process_body(body):
     # User selection for next resource + method
     breakout, no_match = False, False
     while True and not breakout:
-        print("\r\nType in the next link relation for top-level, "
-              "or for any listed items input item's uri from href.\n"
-              "For example, item for user 'Joonas' has href "
-              "/api/users/joonas1/. To access this user, type in 'joonas1'."
+        print("\r\nType in the next link relation name for top-level, "
+              "or for any listed items input item's URI"
               "\nTerminate program with 'q'"
               )
         kwrd = input("\r\nType in your selection: ")
@@ -185,7 +192,7 @@ def process_body(body):
             print("DEBUG:\t\tSaving body-control href")
             # Check if method given
             if "method" in body["@controls"][kwrd].keys():
-                method = body["@controls"][kwrd]["method"]
+                method = body["@controls"][kwrd]["method"].lower()
             else:
                 # If no method given for a control, assume it's GET
                 method = "get"
@@ -207,7 +214,7 @@ def process_body(body):
                     href = item["@controls"]["self"]["href"]
                     # Check if method given
                     if "method" in item["@controls"]["self"]:
-                        method = item["@controls"]["self"]["method"]
+                        method = item["@controls"]["self"]["method"].lower()
                     else:
                         # if no method given for a control,
                         # assume it's GET
@@ -233,7 +240,7 @@ def process_body(body):
         print("DEBUG:\t\tSchema is not None")
     else:
         print("DEBUG:\t\tschema is now: ", schema)
-    return href, method.lower(), schema
+    return href, method, schema
 
 
 def get_resource(s, href):
@@ -244,11 +251,29 @@ def get_resource(s, href):
     returns None.
     '''
 
-    resp = s.get(href)
-    if resp.status_code != 200:
-        raise APIError(resp.status_code, resp.content)
-    else:
-        return resp.json()
+    try:
+        resp = s.get(href)
+        print("DEBUG GET:\t\tStatus code: ", resp.status_code)
+        if resp.status_code == 302:
+            href = resp.headers["Location"]
+            print("This links to ", href)
+        if resp.status_code != 200:
+            raise APIError(resp.status_code, resp.content)
+        else:
+            return resp.json()
+    except JSONDecodeError:
+        print("Server response was not a valid JSON document.")
+        return None
+    except KeyError:
+        print("\"@controls\" not found for API. Sure this is a"
+              "RESTful-API?"
+              )
+
+
+def ask_post_input(key, type):
+    return input("Give value for '{}' of type {}"
+                 .format(key, type)
+                 )
 
 
 def post_resource(s, href, schema):
@@ -259,9 +284,164 @@ def post_resource(s, href, schema):
     returns None.
     '''
 
-    # Build POST according to provided schema
+    # Build POST base according to provided schema
     # See submit_data -function
-    data = []
+    data = {}
+    # Generate difference list between all properties and required properties
+    props_list = []
+    for key in schema["properties"].keys():
+        props_list.append(key)
+    # Courtesy of Mark Byers @ https://stackoverflow.com/questions/3462143/get-difference-between-two-lists  # noqa: E501
+    s = set(schema["required"])
+    opt_props = [x for x in props_list if x not in s]
+    # Three possible POSTS: UserCollection, UserItem, EquipmentItem
+    # Input data for each schema-property
+    print("Create new resource.")
+    # POST UserCollection uses user-schema
+    if schema["title"] == "User schema":
+        for key in schema["required"]:
+            while True:
+                value = ask_post_input(key, schema["properties"][key]["type"])
+                # Test for type
+                if len(value) >= 2 and len(value) <= 64:
+                    break
+                else:
+                    print("Input must be between 2 and 64 characters long")
+            data[key] = value
+        # Ask for optionals
+        if opt_props:
+            while True:
+                ans = "n"
+                # ans = input("Input optional values? (y/n): ")
+                if ans == "n":
+                    break
+                elif ans == "y":
+                    # Optionals listed in opt_props defined above
+                    # No optional properties in user_schema
+                    for key in opt_props:
+                        pass
+    # POST UserItem uses equipment schema
+    elif schema["title"] == "Equipment schema":
+        for key in schema["required"]:
+            if key in ["name", "category", "brand", "model"]:
+                while True:
+                    value = ask_post_input(key,
+                                           schema["properties"][key]["type"]
+                                           )
+                    # Test for type
+                    if len(value) >= 2 and len(value) <= 64:
+                        break
+                    else:
+                        print("Input must be between 2 and 64 characters long")
+                data[key] = value
+            elif key in ["model"]:
+                while True:
+                    value = ask_post_input(key,
+                                           schema["properties"][key]["type"]
+                                           )
+                    # Test for type
+                    if len(value) >= 2 and len(value) <= 128:
+                        break
+                    else:
+                        print("Input must be between 2 and "
+                              "128 characters long")
+                data[key] = value
+            elif key in ["date_added"]:
+                while True:
+                    print("Give date and time in format "
+                          "'YYYY-MM-DD hh:mm:ss'.")
+                    value = ask_post_input(key,
+                                           schema["properties"][key]["type"]
+                                           )
+                    # Test for pattern
+                    if re.match(schema["properties"][key]["pattern"], value):
+                        break
+                    else:
+                        print("Input must be format 'YYYY-MM-DD hh:mm:ss'.")
+                data[key] = value
+        # Ask for optionals
+        else:
+            while True:
+                ans = input("Input optional values? (y/n): ")
+                if ans == "n":
+                    break
+                elif ans == "y":
+                    # Optionals listed in opt_props defined above
+                    for key in opt_props:
+                        if key in ["date_retired"]:
+                            while True:
+                                print("Give date and time in format "
+                                      "'YYYY-MM-DD hh:mm:ss'.")
+                                value = ask_post_input(key, schema["properties"][key]["type"])  # noqa: E501
+                                # Test for pattern
+                                if re.match(schema["properties"][key]["pattern"], value):  # noqa: E501
+                                    break
+                                else:
+                                    print("Input must be format "
+                                          "'YYYY-MM-DD hh:mm:ss'.")
+                            data[key] = value
+                    break
+    # POST EquipmentItem uses component schema
+    elif schema["title"] == "Component schema":
+        for key in schema["required"]:
+            if key in ["name", "category", "brand", "model"]:
+                while True:
+                    value = ask_post_input(key,
+                                           schema["properties"][key]["type"]
+                                           )
+                    # Test for type
+                    if len(value) >= 2 and len(value) <= 64:
+                        break
+                    else:
+                        print("Input must be between 2 and 64 characters long")
+                data[key] = value
+            elif key in ["model"]:
+                while True:
+                    value = ask_post_input(key,
+                                           schema["properties"][key]["type"]
+                                           )
+                    # Test for type
+                    if len(value) >= 2 and len(value) <= 128:
+                        break
+                    else:
+                        print("Input must be between 2 and "
+                              "128 characters long")
+                data[key] = value
+            elif key in ["date_added"]:
+                while True:
+                    print("Give date and time in format "
+                          "'YYYY-MM-DD hh:mm:ss'.")
+                    value = ask_post_input(key,
+                                           schema["properties"][key]["type"]
+                                           )
+                    # Test for pattern
+                    if re.match(schema["properties"][key]["pattern"], value):
+                        break
+                    else:
+                        print("Input must be format 'YYYY-MM-DD hh:mm:ss'.")
+                data[key] = value
+        # Ask for optionals
+        else:
+            while True:
+                ans = input("Input optional values? (y/n): ")
+                if ans == "n":
+                    break
+                elif ans == "y":
+                    # Optionals listed in opt_props defined above
+                    for key in opt_props:
+                        if key in ["date_retired"]:
+                            while True:
+                                print("Give date and time in format "
+                                      "'YYYY-MM-DD hh:mm:ss'.")
+                                value = ask_post_input(key, schema["properties"][key]["type"])  # noqa: E501
+                                # Test for pattern
+                                if re.match(schema["properties"][key]["pattern"], value):  # noqa: E501
+                                    break
+                                else:
+                                    print("Input must be format "
+                                          "'YYYY-MM-DD hh:mm:ss'.")
+                            data[key] = value
+                    break
     # Then post
     resp = s.post(href, json=data)
     if resp.status_code == 201:

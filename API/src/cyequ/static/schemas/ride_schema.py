@@ -10,6 +10,7 @@ def ride_schema():
     '''
 
     schema = {
+        "title": "Ride schema",
         "type": "object",
         "required": ["name", "duration", "datetime"]
     }
