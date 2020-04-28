@@ -31,14 +31,26 @@ def main():
     #    print("(J)ärjestä kokoelma")
     #    print("(T)ulosta kokoelma")
     #    print("(Q)uittaa")
+
         while True:
-            if method == "get":
-                body = get_resource(s, SERVER_URL + href)
-            if body is not None:
-                process_body(body)
-            cont = input("Run again? (y/n): ")
-            if cont != "y":
-                break
+            try:
+                if method == "get":
+                    body = get_resource(s, SERVER_URL + href)
+                if body is not None:
+                    process_body(body)
+                cont = input("Run again? (y/n): ")
+                if cont != "y":
+                    break
+            except ConnectionError:
+                print("Get request to {} experienced a connection error."
+                      .format(SERVER_URL + href)
+                      )
+            except requests.Timeout:
+                print("Get request to {} timed out.".format(SERVER_URL + href))
+            except requests.TooManyRedirects:
+                print("Get request to {} experienced too many redirects."
+                      .format(SERVER_URL + href)
+                      )
 
 
 if __name__ == "__main__":
