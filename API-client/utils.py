@@ -125,11 +125,13 @@ def process_body(body):
         pass
     # body_copy = [val for val in body_copy if val in ["@namespaces", "@controls", "items"]]  # noqa: E501
     # Print the response base data, if any
+    if body_copy.keys():
+        print("\r\nResource data:")
     for key in body_copy.keys():
         print("{}: {}".format(key, body_copy[key]))
     # Then process and print available @controls for this resource
     # For our RESTful API, @controls should always be included in response body
-    print("Controls available with this resource: ")
+    print("\r\nControls available with this resource: ")
     for ctrl in body["@controls"].keys():
         print("Link relation: {}".format(ctrl), end="")
         for attr in body["@controls"][ctrl]:
@@ -139,18 +141,99 @@ def process_body(body):
                       end=""
                       )
         print("")
-    print("\r\n")
+    # print("\r\n", end="")
+    # Process items list if included
     # Since the items' list could be very long, process and print any items
     # included in response as the last part
-    for ind in body["items"]:
-        for key in ind.keys():
-            if key != "@controls":
-                print(key)
-                # print("{}: {}".format(key, body["items"][key]))
-
-
-
-#    return href, method
+    if "items" in body:
+        for i, val in enumerate(body["items"]):
+            print("\r\nResources items:")
+            print("[{}]".format(i+1), end="")
+            for key in val.keys():
+                # Print data of each item
+                if key != "@controls":
+                    print("\t{}: {}".format(key, body["items"][i][key]))
+                # Print link relation "self" for each item
+                else:
+                    for ctrl in body["items"][i][key].keys():
+                        if ctrl == "self":
+                            print("\tLink relation: {}\thref: {}"
+                                  .format(ctrl,
+                                          body["items"][i][key][ctrl]["href"]
+                                          )
+                                  )
+            print("")
+    else:
+        print("\r\nResource has no item data.")
+    # User selection for next resource + method
+    breakout, no_match = False, False
+    while True and not breakout:
+        print("\r\nType in the next link relation for top-level, "
+              "or for any listed items input item's uri from href.\n"
+              "For example, item for user 'Joonas' has href "
+              "/api/users/joonas1/. To access this user, type in 'joonas1'."
+              "\nTerminate program with 'q'"
+              )
+        kwrd = input("\r\nType in your selection: ")
+        print("DEBUG:\t\tInput kwrd: ", kwrd)
+        if kwrd.lower() == "q":
+            print("DEBUG:\t\tInput kwrd was 'q'")
+            href, method, schema = None, None, None
+            break
+        elif kwrd in body["@controls"].keys():
+            href = body["@controls"][kwrd]["href"]
+            print("DEBUG:\t\tSaving body-control href")
+            # Check if method given
+            if "method" in body["@controls"][kwrd].keys():
+                method = body["@controls"][kwrd]["method"]
+            else:
+                # If no method given for a control, assume it's GET
+                method = "get"
+            # Check if schema given
+            if "schema" in body["@controls"][kwrd].keys():
+                schema = body["@controls"][kwrd]["schema"]
+            else:
+                schema = None
+            print("DEBUG:\t\tBreak from body-controls")
+            break
+        # Make sure response body includes "items" list
+        elif "items" in body:
+            # Search each item dict for match to input kwrd
+            for item in body["items"]:
+                href_list = item["@controls"]["self"]["href"].split("/")
+                # Match kwrd to second last. The last is "" (empty string)
+                # from href split method.
+                if kwrd == href_list[-2]:
+                    href = item["@controls"]["self"]["href"]
+                    # Check if method given
+                    if "method" in item["@controls"]["self"]:
+                        method = item["@controls"]["self"]["method"]
+                    else:
+                        # if no method given for a control,
+                        # assume it's GET
+                        method = "get"
+                    # Check if schema given
+                    if "schema" in item["@controls"]["self"]:
+                        schema = item["@controls"]["self"]["schema"]
+                    else:
+                        schema = None
+                    breakout = True
+                    break
+            else:
+                no_match = True
+        else:
+            no_match = True
+        if no_match:
+            no_match = False
+            print("\nYour input didn't match any link relation. Try again or "
+                  "type 'q' to quit.\n")
+    print("DEBUG:\t\thref is now: ", href)
+    print("DEBUG:\t\tmethod is now: ", method)
+    if schema:
+        print("DEBUG:\t\tSchema is not None")
+    else:
+        print("DEBUG:\t\tschema is now: ", schema)
+    return href, method.lower(), schema
 
 
 def get_resource(s, href):

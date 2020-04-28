@@ -23,34 +23,31 @@ def main():
     with requests.Session() as s:
         SERVER_URL, href, method = api_entry(s)
         SERVER_URL = SERVER_URL.strip("/api/")
-        print("Full URL: ", SERVER_URL + href)
-    #    print("(R)akenna kokoelma")
-    #    print("(L)isää uusia levyjä")
-    #    print("(M)uokkaa levyjä")
-    #    print("(P)oista levyjä")
-    #    print("(J)ärjestä kokoelma")
-    #    print("(T)ulosta kokoelma")
-    #    print("(Q)uittaa")
-
-        while True:
-            try:
+        print("DEBUG MAIN:\t\tFull URL: ", SERVER_URL + href, "\r\n")
+        breakout = False
+        try:
+            while True and not breakout:
                 if method == "get":
+                    print("DEBUG MAIN:\t\thref for GET is: ", href)
+                    print("DEBUG MAIN:\t\tGETting: ", SERVER_URL + href)
                     body = get_resource(s, SERVER_URL + href)
                 if body is not None:
-                    process_body(body)
-                cont = input("Run again? (y/n): ")
-                if cont != "y":
+                    href, method, schema = process_body(body)
+                    print("DEBUG MAIN:\t\thref after process is: ", href)
+                    print("DEBUG MAIN:\t\tmethod after process is: ", method)
+                if href is None and method is None and schema is None:
+                    breakout = True
                     break
-            except ConnectionError:
-                print("Get request to {} experienced a connection error."
-                      .format(SERVER_URL + href)
-                      )
-            except requests.Timeout:
-                print("Get request to {} timed out.".format(SERVER_URL + href))
-            except requests.TooManyRedirects:
-                print("Get request to {} experienced too many redirects."
-                      .format(SERVER_URL + href)
-                      )
+        except ConnectionError:
+            print("Get request to {} experienced a connection error."
+                  .format(SERVER_URL + href)
+                  )
+        except requests.Timeout:
+            print("Get request to {} timed out.".format(SERVER_URL + href))
+        except requests.TooManyRedirects:
+            print("Get request to {} experienced too many redirects."
+                  .format(SERVER_URL + href)
+                  )
 
 
 if __name__ == "__main__":
@@ -58,4 +55,4 @@ if __name__ == "__main__":
         main()
         print("Good bye!")
     except KeyboardInterrupt:
-        print("Ohjelma keskeytettiin, kokoelmaa ei tallennettu")
+        print("\r\n\r\nProgram terminated by Ctrl + C.")
