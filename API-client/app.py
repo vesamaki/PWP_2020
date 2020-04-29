@@ -13,7 +13,7 @@ import requests
 
 
 # Project imports
-from utils import APIError, submit_data, \
+from utils import APIError, extract_prev_href, print_line, \
                   api_entry, \
                   process_body, \
                   get_resource, post_resource, put_resource, delete_resource
@@ -29,10 +29,8 @@ def main():
             body = None
             while True and not breakout:
                 if body is not None:
-                    for i in range(79):
-                        print("-", end="")
-                    else:
-                        print("")
+                    # Print UI
+                    print_line()
                     print("\r\nCurrent route: {}".format(href))
                     href, method, schema = process_body(body)
                     print("DEBUG MAIN:\t\thref after process is: ", href)
@@ -41,49 +39,78 @@ def main():
                     print("DEBUG MAIN:\t\thref for GET is: ", href)
                     print("DEBUG MAIN:\t\tGETting: ", SERVER_URL + href)
                     try:
+                        # Resfresh UI
                         body = get_resource(s, SERVER_URL + href)
                     except APIError as err:
-                        print(err)
+                        print("\n", err)
+                        input("Press Enter to continue...")
                 elif method == "post":
                     print("DEBUG MAIN:\t\thref for POST is: ", href)
                     print("DEBUG MAIN:\t\tPOSTing: ", SERVER_URL + href)
                     try:
-                        resp = post_resource(s, SERVER_URL + href)
+                        # Post new resource
+                        resp = post_resource(s, SERVER_URL + href, schema)
                         if resp.status_code == 201:
+                            print("\r\nResource created: ",
+                                  resp.headers["Location"].strip(SERVER_URL)
+                                  )
                             # Ask user to get data on newly created resource,
                             # or stay at current resource-state
                             while True:
-                                str_in = input("Examine newly created "
+                                str_in = input("\r\nExamine newly created "
                                                "resource? (y/n): ") \
                                                .strip().lower()
                                 if str_in == "y":
                                     # Get newly created resource data
                                     # and return body
-                                    resp = get_resource(s, resp.headers["Location"])  # noqa: E501
-                                    return resp.json()
+                                    body = get_resource(s, resp.headers["Location"])  # noqa: E501
+                                    break
                                 elif str_in == "n":
-                                    return None
+                                    # Resfresh UI
+                                    body = get_resource(s, SERVER_URL + href)
+                                    break
                                 else:
                                     print("Select \"y\" for yes or "
                                           "\"n\n for no, please.")
                         else:
                             raise APIError(resp.status_code, resp.content)
                     except APIError as err:
-                        print(err)
+                        print("\n", err)
+                        input("Press Enter to continue...")
                 elif method == "put":
                     print("DEBUG MAIN:\t\thref for PUT is: ", href)
                     print("DEBUG MAIN:\t\tPUTing: ", SERVER_URL + href)
                     try:
-                        put_resource(s, SERVER_URL + href)
+                        # Make changes
+                        resp = put_resource(s, SERVER_URL + href, schema)
+                        if resp.status_code == 204:
+                            print("\r\nResource modified: ", href)
+                            # Resfresh UI
+                            print("Refreshing UI...")
+                            body = get_resource(s, SERVER_URL + href)
+                        else:
+                            raise APIError(resp.status_code, resp.content)
                     except APIError as err:
-                        print(err)
+                        print("\n", err)
+                        input("Press Enter to continue...")
                 elif method == "delete":
                     print("DEBUG MAIN:\t\thref for DELETE is: ", href)
                     print("DEBUG MAIN:\t\tDELETing: ", SERVER_URL + href)
                     try:
-                        delete_resource(s, SERVER_URL + href)
+                        # Delete resource
+                        resp = delete_resource(s, SERVER_URL + href)
+                        if resp.status_code == 204:
+                            print("\r\nResource deleted: ", href)
+                            # If successfull, go back one level in href
+                            href = extract_prev_href(href)
+                            print("Falling back to parent resource...")
+                            body = get_resource(s, SERVER_URL + href)
+                        else:
+                            raise APIError(resp.status_code, resp.content)
                     except APIError as err:
-                        print(err)
+                        print("\n", err)
+                        input("Press Enter to continue...")
+                # Terminates program
                 elif href is None and method is None and schema is None:
                     breakout = True
                     break

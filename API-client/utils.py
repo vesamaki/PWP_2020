@@ -38,25 +38,11 @@ class APIError(Exception):
                        )
 
 
-# From PWP-course EX4 mumeta-submit.py:
-def submit_data(s, api_url, ctrl, data):
-    """
-    submit_data(s, ctrl, data) -> requests.Response
-
-    Sends *data* provided as a JSON compatible Python data structure to the API
-    using URI and HTTP method defined in the *ctrl* dictionary
-    (a Mason @control). The data is serialized by this function and sent to
-    the API.
-
-    Returns the response object provided by requests.
-    """
-
-    resp = s.request(ctrl["method"],
-                     api_url + ctrl["href"],
-                     data=json.dumps(data),
-                     headers={"Content-type": "application/json"}
-                     )
-    return resp
+def print_line():
+    for i in range(81):
+        print("-", end="")
+    else:
+        print("")
 
 
 def api_entry(s):
@@ -164,8 +150,8 @@ def process_body(body):
                             # The last is "" (empty string) from href-
                             # split method.
                             kwrd = href_list[-2]
-                            print("\tLink relation - name: "
-                                  "{}\tURI: {}\thref: {}"
+                            print("\tLink relation - \tname: "
+                                  "{}\n\t\t\t\tURI: {}\n\t\t\t\thref: {}"
                                   .format(ctrl,
                                           kwrd,
                                           body["items"][i][key][ctrl]["href"]
@@ -270,8 +256,8 @@ def get_resource(s, href):
               )
 
 
-def ask_post_input(key, type):
-    return input("Give value for '{}' of type {}"
+def ask_input(key, type):
+    return input("Give value for '{}' of type '{}': "
                  .format(key, type)
                  )
 
@@ -279,9 +265,11 @@ def ask_post_input(key, type):
 def post_resource(s, href, schema):
     '''
     Function for POST-request.
-    Returns newly created resource's GET-request body, or
-    raises APIError exception if response status_code is other than 201 and
-    returns None.
+    Sends *data* provided as a JSON compatible Python data structure to the API
+    using URI. The data is serialized by this function and sent to
+    the API.
+
+    Returns newly created resource's response object provided by requests.
     '''
 
     # Build POST base according to provided schema
@@ -292,16 +280,16 @@ def post_resource(s, href, schema):
     for key in schema["properties"].keys():
         props_list.append(key)
     # Courtesy of Mark Byers @ https://stackoverflow.com/questions/3462143/get-difference-between-two-lists  # noqa: E501
-    s = set(schema["required"])
-    opt_props = [x for x in props_list if x not in s]
+    req_set = set(schema["required"])
+    opt_props = [x for x in props_list if x not in req_set]
     # Three possible POSTS: UserCollection, UserItem, EquipmentItem
     # Input data for each schema-property
-    print("Create new resource.")
+    print("\nCreate new resource.\n")
     # POST UserCollection uses user-schema
     if schema["title"] == "User schema":
         for key in schema["required"]:
             while True:
-                value = ask_post_input(key, schema["properties"][key]["type"])
+                value = ask_input(key, schema["properties"][key]["type"])
                 # Test for type
                 if len(value) >= 2 and len(value) <= 64:
                     break
@@ -323,9 +311,9 @@ def post_resource(s, href, schema):
     # POST UserItem uses equipment schema
     elif schema["title"] == "Equipment schema":
         for key in schema["required"]:
-            if key in ["name", "category", "brand", "model"]:
+            if key in ["name", "category", "brand"]:
                 while True:
-                    value = ask_post_input(key,
+                    value = ask_input(key,
                                            schema["properties"][key]["type"]
                                            )
                     # Test for type
@@ -336,7 +324,7 @@ def post_resource(s, href, schema):
                 data[key] = value
             elif key in ["model"]:
                 while True:
-                    value = ask_post_input(key,
+                    value = ask_input(key,
                                            schema["properties"][key]["type"]
                                            )
                     # Test for type
@@ -350,9 +338,9 @@ def post_resource(s, href, schema):
                 while True:
                     print("Give date and time in format "
                           "'YYYY-MM-DD hh:mm:ss'.")
-                    value = ask_post_input(key,
-                                           schema["properties"][key]["type"]
-                                           )
+                    value = ask_input(key,
+                                      schema["properties"][key]["type"]
+                                      )
                     # Test for pattern
                     if re.match(schema["properties"][key]["pattern"], value):
                         break
@@ -372,7 +360,7 @@ def post_resource(s, href, schema):
                             while True:
                                 print("Give date and time in format "
                                       "'YYYY-MM-DD hh:mm:ss'.")
-                                value = ask_post_input(key, schema["properties"][key]["type"])  # noqa: E501
+                                value = ask_input(key, schema["properties"][key]["type"])  # noqa: E501
                                 # Test for pattern
                                 if re.match(schema["properties"][key]["pattern"], value):  # noqa: E501
                                     break
@@ -384,11 +372,11 @@ def post_resource(s, href, schema):
     # POST EquipmentItem uses component schema
     elif schema["title"] == "Component schema":
         for key in schema["required"]:
-            if key in ["name", "category", "brand", "model"]:
+            if key in ["name", "category", "brand"]:
                 while True:
-                    value = ask_post_input(key,
-                                           schema["properties"][key]["type"]
-                                           )
+                    value = ask_input(key,
+                                      schema["properties"][key]["type"]
+                                      )
                     # Test for type
                     if len(value) >= 2 and len(value) <= 64:
                         break
@@ -397,9 +385,9 @@ def post_resource(s, href, schema):
                 data[key] = value
             elif key in ["model"]:
                 while True:
-                    value = ask_post_input(key,
-                                           schema["properties"][key]["type"]
-                                           )
+                    value = ask_input(key,
+                                      schema["properties"][key]["type"]
+                                      )
                     # Test for type
                     if len(value) >= 2 and len(value) <= 128:
                         break
@@ -411,9 +399,9 @@ def post_resource(s, href, schema):
                 while True:
                     print("Give date and time in format "
                           "'YYYY-MM-DD hh:mm:ss'.")
-                    value = ask_post_input(key,
-                                           schema["properties"][key]["type"]
-                                           )
+                    value = ask_input(key,
+                                      schema["properties"][key]["type"]
+                                      )
                     # Test for pattern
                     if re.match(schema["properties"][key]["pattern"], value):
                         break
@@ -433,7 +421,7 @@ def post_resource(s, href, schema):
                             while True:
                                 print("Give date and time in format "
                                       "'YYYY-MM-DD hh:mm:ss'.")
-                                value = ask_post_input(key, schema["properties"][key]["type"])  # noqa: E501
+                                value = ask_input(key, schema["properties"][key]["type"])  # noqa: E501
                                 # Test for pattern
                                 if re.match(schema["properties"][key]["pattern"], value):  # noqa: E501
                                     break
@@ -443,24 +431,11 @@ def post_resource(s, href, schema):
                             data[key] = value
                     break
     # Then post
-    resp = s.post(href, json=data)
-    if resp.status_code == 201:
-        # Resp location header has href for newly created resource
-        # Get newly created resource data and return body
-        resp = get_resource(s, resp.headers["Location"])
-    else:
-        raise APIError(resp.status_code, resp.content)
-    # Ask user to get data on newly created resource,
-    # or stay at current resource-state
-    while True:
-        str_in = input("Examine newly created resource? (y/n): ") \
-                    .strip().lower()
-        if str_in == "y":
-            return resp.json()
-        elif str_in == "n":
-            return None
-        else:
-            print("Select \"y\" for yes or \"n\n for no, please.")
+    resp = s.post(href,
+                  data=json.dumps(data),
+                  headers={"Content-type": "application/json"}
+                  )
+    return resp
 
 
 def put_resource(s, href, schema):
@@ -471,12 +446,184 @@ def put_resource(s, href, schema):
     '''
 
     # Build PUT according to provided schema
-    # See submit_data -function
-    data = []
+    data = {}
+    # Generate difference list between all properties and required properties
+    props_list = []
+    for key in schema["properties"].keys():
+        props_list.append(key)
+    # Courtesy of Mark Byers @ https://stackoverflow.com/questions/3462143/get-difference-between-two-lists  # noqa: E501
+    req_set = set(schema["required"])
+    opt_props = [x for x in props_list if x not in req_set]
+    # Three possible PUTs: UserItem, EquipmentItem, ComponentItem
+    # Input data for each schema-property
+    print("\nModify resource.\n")
+    # PUT UserItem uses user-schema
+    if schema["title"] == "User schema":
+        for key in schema["required"]:
+            while True:
+                value = ask_input(key, schema["properties"][key]["type"])
+                # Test for type
+                if len(value) >= 2 and len(value) <= 64:
+                    break
+                else:
+                    print("Input must be between 2 and 64 characters long")
+            data[key] = value
+        # Ask for optionals
+        if opt_props:
+            while True:
+                ans = "n"
+                # ans = input("Input optional values? (y/n): ")
+                if ans == "n":
+                    break
+                elif ans == "y":
+                    # Optionals listed in opt_props defined above
+                    # No optional properties in user_schema
+                    for key in opt_props:
+                        pass
+    # PUT EquipmentItem uses equipment schema
+    elif schema["title"] == "Equipment schema":
+        for key in schema["required"]:
+            if key in ["name", "category", "brand"]:
+                while True:
+                    value = ask_input(key,
+                                      schema["properties"][key]["type"]
+                                      )
+                    # Test for type
+                    if len(value) >= 2 and len(value) <= 64:
+                        break
+                    else:
+                        print("Input must be between 2 and 64 characters long")
+                data[key] = value
+            elif key in ["model"]:
+                while True:
+                    value = ask_input(key,
+                                      schema["properties"][key]["type"]
+                                      )
+                    # Test for type
+                    if len(value) >= 2 and len(value) <= 128:
+                        break
+                    else:
+                        print("Input must be between 2 and "
+                              "128 characters long")
+                data[key] = value
+            elif key in ["date_added"]:
+                while True:
+                    print("Give date and time in format "
+                          "'YYYY-MM-DD hh:mm:ss'.")
+                    value = ask_input(key,
+                                      schema["properties"][key]["type"]
+                                      )
+                    # Test for pattern
+                    if re.match(schema["properties"][key]["pattern"], value):
+                        break
+                    else:
+                        print("Input must be format 'YYYY-MM-DD hh:mm:ss'.")
+                data[key] = value
+        # Ask for optionals
+        else:
+            while True:
+                ans = input("Input optional values? (y/n): ")
+                if ans == "n":
+                    break
+                elif ans == "y":
+                    # Optionals listed in opt_props defined above
+                    for key in opt_props:
+                        if key in ["date_retired"]:
+                            while True:
+                                print("Give date and time in format "
+                                      "'YYYY-MM-DD hh:mm:ss'.")
+                                value = ask_input(key, schema["properties"][key]["type"])  # noqa: E501
+                                # Test for pattern
+                                if re.match(schema["properties"][key]["pattern"], value):  # noqa: E501
+                                    break
+                                else:
+                                    print("Input must be format "
+                                          "'YYYY-MM-DD hh:mm:ss'.")
+                            data[key] = value
+                    break
+    # PUT ComponentItem uses component schema
+    elif schema["title"] == "Component schema":
+        for key in schema["required"]:
+            if key in ["name", "category", "brand"]:
+                while True:
+                    value = ask_input(key,
+                                      schema["properties"][key]["type"]
+                                      )
+                    # Test for type
+                    if len(value) >= 2 and len(value) <= 64:
+                        break
+                    else:
+                        print("Input must be between 2 and 64 characters long")
+                data[key] = value
+            elif key in ["model"]:
+                while True:
+                    value = ask_input(key,
+                                      schema["properties"][key]["type"]
+                                      )
+                    # Test for type
+                    if len(value) >= 2 and len(value) <= 128:
+                        break
+                    else:
+                        print("Input must be between 2 and "
+                              "128 characters long")
+                data[key] = value
+            elif key in ["date_added"]:
+                while True:
+                    print("Give date and time in format "
+                          "'YYYY-MM-DD hh:mm:ss'.")
+                    value = ask_input(key,
+                                      schema["properties"][key]["type"]
+                                      )
+                    # Test for pattern
+                    if re.match(schema["properties"][key]["pattern"], value):
+                        break
+                    else:
+                        print("Input must be format 'YYYY-MM-DD hh:mm:ss'.")
+                data[key] = value
+        # Ask for optionals
+        else:
+            while True:
+                ans = input("Input optional values? (y/n): ")
+                if ans == "n":
+                    break
+                elif ans == "y":
+                    # Optionals listed in opt_props defined above
+                    for key in opt_props:
+                        if key in ["date_retired"]:
+                            while True:
+                                print("Give date and time in format "
+                                      "'YYYY-MM-DD hh:mm:ss'.")
+                                value = ask_input(key, schema["properties"][key]["type"])  # noqa: E501
+                                # Test for pattern
+                                if re.match(schema["properties"][key]["pattern"], value):  # noqa: E501
+                                    break
+                                else:
+                                    print("Input must be format "
+                                          "'YYYY-MM-DD hh:mm:ss'.")
+                            data[key] = value
+                    break
     # Then put
-    resp = s.put(href, json=data)
-    if resp.status_code != 204:
-        raise APIError(resp.status_code, resp.content)
+    resp = s.put(href,
+                 data=json.dumps(data),
+                 headers={"Content-type": "application/json"}
+                 )
+    return resp
+
+
+def extract_prev_href(href):
+    '''
+    Extracts the "one level down" href of given API href based on "/".
+    Only used with DELETE-method
+    Returns processed new href.
+    '''
+
+    new_href = "/"
+    # Split href to list by "/"
+    href_list = href.split("/")
+    # Construct new_href
+    for val in href_list[1:-2]:
+        new_href = new_href + val + "/"
+    return new_href
 
 
 def delete_resource(s, href):
@@ -487,5 +634,4 @@ def delete_resource(s, href):
     '''
 
     resp = s.delete(href)
-    if resp.status_code != 204:
-        raise APIError(resp.status_code, resp.content)
+    return resp
