@@ -10,25 +10,25 @@ from json import JSONDecodeError
 
 # From PWP-course EX4 mumeta-submit.py
 class APIError(Exception):
-    """
+    '''
     Exception class used when the API responds with an error code. Gives
     information about the error in the console.
-    """
+    '''
 
     def __init__(self, code, error):
-        """
+        '''
         Initializes the exception with *code* as the status code from
         the response and *error* as the response body.
-        """
+        '''
 
         self.error = json.loads(error)
         self.code = code
 
     def __str__(self):
-        """
+        '''
         Returns all details from the error response sent by the API formatted
         into a string.
-        """
+        '''
 
         return "Error {code} while accessing {uri}: {msg}\nDetails:\n{msgs}" \
                .format(code=self.code,
@@ -39,6 +39,10 @@ class APIError(Exception):
 
 
 def print_line():
+    '''
+    Simply prints a line of 80 '-' characters.
+    '''
+
     for i in range(81):
         print("-", end="")
     else:
@@ -46,6 +50,17 @@ def print_line():
 
 
 def api_entry(s):
+    '''
+    Function used to get the server URL to the API from the user.
+
+    Returns the given server URL, the href and method of link relation the
+    entry point in the API.
+
+    Excepts for requests session exceptions (described in main()). Also:
+    JSONDecodeError     Server responses with valid JSON.
+    KeyError            In case no '@controls' key in response body.
+    '''
+
     while True:
         server_url = input("Enter API URL: ")
         if server_url.startswith("http://"):
@@ -96,7 +111,15 @@ def api_entry(s):
 def process_body(body):
     '''
     This function will print any response base data, as well as controls, and
-    provides user input queries for next resource action.
+    provides user input queries for next resource action. It has two parts,
+    first it parses and prints the input response body.
+    First any resource data, then all link relations with this resource, and
+    last data and link relations for each item included in an items list,
+    if any.
+    Second, it enters a forever loop to wait for user input regarding the next
+    resource. This input is a keyword to, which is compared to either the
+    resources link relations, or to any included items link relations.
+
     Returns href and method for the next resource.
     '''
 
@@ -222,6 +245,7 @@ def process_body(body):
                   "type 'q' to quit.\n")
     print("DEBUG:\t\thref is now: ", href)
     print("DEBUG:\t\tmethod is now: ", method)
+    # for debuging - remove...
     if schema:
         print("DEBUG:\t\tSchema is not None")
     else:
@@ -232,31 +256,24 @@ def process_body(body):
 def get_resource(s, href):
     '''
     Function for GET-request.
-    Returns request body, or
-    raises APIError exception if response status_code is other than 200 and
-    returns None.
+    Returns request body.
+    Raises APIError exception if response status_code is other than 200
     '''
 
-    try:
-        resp = s.get(href)
-        print("DEBUG GET:\t\tStatus code: ", resp.status_code)
-        if resp.status_code == 302:
-            href = resp.headers["Location"]
-            print("This links to ", href)
-        if resp.status_code != 200:
-            raise APIError(resp.status_code, resp.content)
-        else:
-            return resp.json()
-    except JSONDecodeError:
-        print("Server response was not a valid JSON document.")
-        return None
-    except KeyError:
-        print("\"@controls\" not found for API. Sure this is a"
-              "RESTful-API?"
-              )
+    resp = s.get(href)
+    print("DEBUG GET:\t\tStatus code: ", resp.status_code)
+    if resp.status_code != 200:
+        raise APIError(resp.status_code, resp.content)
+    else:
+        return resp.json()
 
 
 def ask_input(key, type):
+    '''
+    Helper function for post_resource() -function for input of values.
+    Returns the input value.
+    '''
+
     return input("Give value for '{}' of type '{}': "
                  .format(key, type)
                  )
@@ -266,10 +283,12 @@ def post_resource(s, href, schema):
     '''
     Function for POST-request.
     Sends *data* provided as a JSON compatible Python data structure to the API
-    using URI. The data is serialized by this function and sent to
-    the API.
+    using URI. First looks at the provided schema. Then according to schema,
+    asks user for input first to required fields, then for optional fields.
+    The function is specific to PWP course cycling equipment API (at least for
+    now).
 
-    Returns newly created resource's response object provided by requests.
+    Returns post response object provided by requests.
     '''
 
     # Build POST base according to provided schema
@@ -314,8 +333,8 @@ def post_resource(s, href, schema):
             if key in ["name", "category", "brand"]:
                 while True:
                     value = ask_input(key,
-                                           schema["properties"][key]["type"]
-                                           )
+                                      schema["properties"][key]["type"]
+                                      )
                     # Test for type
                     if len(value) >= 2 and len(value) <= 64:
                         break
@@ -325,8 +344,8 @@ def post_resource(s, href, schema):
             elif key in ["model"]:
                 while True:
                     value = ask_input(key,
-                                           schema["properties"][key]["type"]
-                                           )
+                                      schema["properties"][key]["type"]
+                                      )
                     # Test for type
                     if len(value) >= 2 and len(value) <= 128:
                         break
@@ -441,8 +460,13 @@ def post_resource(s, href, schema):
 def put_resource(s, href, schema):
     '''
     Function for PUT-request.
-    Raises APIError exception if response status_code is other than 204.
-    Returns None.
+    Sends *data* provided as a JSON compatible Python data structure to the API
+    using URI. First looks at the provided schema. Then according to schema,
+    asks user for input first to required fields, then for optional fields.
+    The function is specific to PWP course cycling equipment API (at least for
+    now).
+
+    Returns post response object provided by requests.
     '''
 
     # Build PUT according to provided schema
@@ -613,7 +637,7 @@ def put_resource(s, href, schema):
 def extract_prev_href(href):
     '''
     Extracts the "one level down" href of given API href based on "/".
-    Only used with DELETE-method
+    Only used with DELETE-method.
     Returns processed new href.
     '''
 
@@ -629,8 +653,8 @@ def extract_prev_href(href):
 def delete_resource(s, href):
     '''
     Function for DELETE-request.
-    Raises APIError exception if response status_code is other than 204.
-    Returns None.
+
+    Returns delete response object provided by requests.
     '''
 
     resp = s.delete(href)
