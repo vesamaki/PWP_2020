@@ -15,9 +15,7 @@ When providing time data to a request, tell also the timezone (stored as UTC in 
 
 ### TODO: ###
 
-##### Write API-client README #####
-
-### Setting up environment ###
+### Setting up API environment ###
 
 This project followed Oulu University's Programmable Web Project course's guides.  
 Essentially, these steps:
@@ -48,6 +46,16 @@ __flask init-db__
 
 Then run flask with command:  
 __flask run__
+
+### Setting up API-client environment ###
+The API client can be run in an instance of the API virtual environment. Alternatively, you can create a separate virtual environment and use the requirements.txt in your-project-folder/API-client/ to install all required dependencies for the client.   Create and activate the client virtual environment.  
+Then change directory to ./API-client/  
+Run command:  
+__pip install -r requirements.txt__
+
+#### Running Flask ####  
+The client is a command line app.  
+Use the command line to change directory to ./API-client. Then run the app by typing __app.py__.
 
 #### Running Tests ####
 Database tests are included in .\\tests\\test_db.py.  
