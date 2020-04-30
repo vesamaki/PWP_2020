@@ -22,10 +22,15 @@ db = SQLAlchemy()
 # Curtesy of StackOverflow:
 # https://stackoverflow.com/questions/43663552/keep-a-datetime-date-in-yyyy-mm-dd-format-when-using-flasks-jsonify  # noqa: E501
 class CustomJSONEncoder(JSONEncoder):
+    '''
+    This class defines a custom JSONEncoder subclass to control the format of
+    jsonify with datetime-objects.
+    '''
     def default(self, obj):
         if isinstance(obj, datetime):
+            # Produces a string, i.e. 2020-04-30T12:18:00,
+            # when database datetime-objects are jsonified by JSONEncoder.
             return obj.isoformat()
-
         return JSONEncoder.default(self, obj)
 
 
@@ -34,6 +39,10 @@ class CustomJSONEncoder(JSONEncoder):
 # http://flask.pocoo.org/docs/1.0/tutorial/factory/#the-application-factory
 # Modified to use Flask SQLAlchemy
 def create_app(test_config=None):
+    '''
+    Creates and returns the API flask application instance.
+    '''
+
     # Create Flask instance with name as set by FLASK_APP variable
     app = Flask(__name__,
                 static_folder="static",
@@ -52,7 +61,7 @@ def create_app(test_config=None):
         app.config.from_pyfile("config.py", silent=True)
     else:
         app.config.from_mapping(test_config)
-    # ensure, that app.instance_path exists.
+    # Ensure, that app.instance_path exists.
     try:
         os.makedirs(app.instance_path)
     except OSError:

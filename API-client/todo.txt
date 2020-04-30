@@ -1,5 +1,2 @@
 NEXT:
 
-FIX profile link relation
-
-Figure out app routing in case of error.

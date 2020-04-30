@@ -36,6 +36,12 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 # we don't need a client for database testing, just the db handle
 @pytest.fixture
 def client():
+    '''
+    Creates the test fixture, an instance of the API application, which exists
+    only for the duration of a test case.
+    '''
+
+    # Create tempfile to store test instance data
     db_fd, db_fname = tempfile.mkstemp()
     config = {
               "SQLALCHEMY_DATABASE_URI": "sqlite:///" + db_fname,
@@ -43,7 +49,7 @@ def client():
               }
     # Create app to be used in testing with this fixture
     app = create_app(config)
-    # Must be used for all db opertations
+    # Must be used for all db operatations
     with app.app_context():
         db.create_all()
         _populate_db()

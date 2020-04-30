@@ -18,8 +18,7 @@ from cyequ.models import User, Equipment, Component, Ride
 
 def _populate_db():
     '''
-    We're prefixing this function and its ilk with a single underscore to
-    softly hint that these are the test module's internal tools.
+    Populates database with test data used in the tests.
     '''
 
     # Create everything

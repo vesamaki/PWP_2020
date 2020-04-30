@@ -1,5 +1,5 @@
 '''
-Docstring to equipment resource routes
+This module holds class-definitions for the API equipment resources.
 '''
 
 # Library imports
@@ -23,12 +23,15 @@ from cyequ.static.schemas.component_schema import component_schema
 
 class EquipmentByUser(Resource):
     '''
-    Class docstring here
+    This class defines responses for EquipmentByUser resource.
     '''
 
     def get(self, user):
         '''
-        GET-method definition for EquipmentByUser resource. - Untested
+        GET-method definition.
+        Builds the response body and adds controls as defined in API design
+
+        Returns flask Response object.
         '''
 
         # Find user by name in database. If not found, respond with error 404
@@ -65,8 +68,17 @@ class EquipmentByUser(Resource):
 
     def post(self, user):
         '''
-        POST-method definition for EquipmentByUser resource. - Untested
-        Adding a component to equipment
+        POST-method definition.
+        Checks for appropriate request body and creates a new equipment
+        resource in the API.
+
+        Exceptions.
+        jsonschema.ValidationError. If request is not
+            a valid JSON document.
+        sqlalchemy.exc.IntegrityError. Violation of SQLite database
+            integrity.
+
+        Returns flask Response object.
         '''
         # Check for json. If fails, respond with error 415
         if request.json is None:
@@ -150,12 +162,15 @@ class EquipmentByUser(Resource):
 
 class EquipmentItem(Resource):
     '''
-    Class docstring here
+    This class defines responses for EquipmentItem resource.
     '''
 
     def get(self, user, equipment):
         '''
-        GET-method definition for EquipmentItem resource. - Untested
+        GET-method definition.
+        Builds the response body and adds controls as defined in API design
+
+        Returns flask Response object.
         '''
 
         # Find user by name in database. If not found, respond with error 404
@@ -232,7 +247,17 @@ class EquipmentItem(Resource):
 
     def post(self, user, equipment):
         '''
-        POST-method definition for EquipmentItem resource. - Untested
+        POST-method definition.
+        Checks for appropriate request body and creates a new component
+        resource in the API.
+
+        Exceptions.
+        jsonschema.ValidationError. If request is not
+            a valid JSON document.
+        sqlalchemy.exc.IntegrityError. Violation of SQLite database
+            integrity.
+
+        Returns flask Response object.
         '''
         # Check for json. If fails, respond with error 415
         if request.json is None:
@@ -353,7 +378,17 @@ class EquipmentItem(Resource):
 
     def put(self, user, equipment):
         '''
-        PUT-method definition for EquipmentItem resource. - Untested
+        PUT-method definition.
+        Checks for appropriate request body and modifies an equipment resource
+        in the API.
+
+        Exceptions.
+        jsonschema.ValidationError. If request is not
+            a valid JSON document.
+        sqlalchemy.exc.IntegrityError. Violation of SQLite database
+            integrity.
+
+        Returns flask Response object.
         '''
 
         # Check for json. If fails, respond with error 415
@@ -439,7 +474,10 @@ class EquipmentItem(Resource):
 
     def delete(self, user, equipment):
         '''
-        DELETE-method definition for EquipmentItem resource. - Untested
+        DELETE-method definition.
+        Deletes an equipment resource in the API.
+
+        Returns flask Response object.
         '''
 
         # Find user by name in database. If not found, respond with error 404

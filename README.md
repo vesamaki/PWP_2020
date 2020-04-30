@@ -16,25 +16,7 @@ When providing time data to a request, tell also the timezone (stored as UTC in 
 ### TODO: ###
 #####    docstrings to all. #####
 
-##### Create json schemas for Models. **Done** #####
-    Put to static folder. **Done**  
-    Figure out format. **Done. Will be a .py file** with content as in Ex3 schema function
-    Importing to app. **Import module as normal**
-
-##### Component UniqueConstraints not working #####
-
-##### What to put in __init__.py of resources -folder #####    
-
-##### Fix db_tests.py according to new project structure **Done** #####
-
-##### Do API implementation tests **Done** #####
-
-##### FOR CLIENT: Reading ISO 8601 datetime format #####  
-I.e: "2019-11-21T10:20:30"  
-Might help: [StackOveflow](https://stackoverflow.com/questions/127803/how-do-i-parse-an-iso-8601-formatted-date)  
-
-##### Test cloning, setup and running #####
-Revise instructions here
+##### Write API-client README #####
 
 ### Setting up environment ###
 

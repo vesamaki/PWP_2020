@@ -1,5 +1,5 @@
 '''
-Docstring to component resource routes
+This module holds class-definitions for the API component resources.
 '''
 
 # Library imports
@@ -20,12 +20,15 @@ from cyequ.static.schemas.component_schema import component_schema
 
 class ComponentItem(Resource):
     '''
-    Class docstring here
+    This class defines responses for ComponentItem resource.
     '''
 
     def get(self, user, equipment, component):
         '''
-        GET-method definition for ComponentItem resource. - Untested
+        GET-method definition.
+        Builds the response body and adds controls as defined in API design
+
+        Returns flask Response object.
         '''
 
         # Find user by name in database. If not found, respond with error 404
@@ -81,7 +84,17 @@ class ComponentItem(Resource):
 
     def put(self, user, equipment, component):
         '''
-        PUT-method definition for EquipmentItem resource. - Untested
+        PUT-method definition.
+        Checks for appropriate request body and modifies an equipment resource
+        in the API.
+
+        Exceptions.
+        jsonschema.ValidationError. If request is not
+            a valid JSON document.
+        sqlalchemy.exc.IntegrityError. Violation of SQLite database
+            integrity.
+
+        Returns flask Response object.
         '''
 
         # Check for json. If fails, respond with error 415
@@ -177,7 +190,10 @@ class ComponentItem(Resource):
 
     def delete(self, user, equipment, component):
         '''
-        DELETE-method definition for ComponentItem resource. - Untested
+        DELETE-method definition.
+        Deletes an equipment resource in the API.
+
+        Returns flask Response object.
         '''
 
         # Find user by name in database. If not found, respond with error 404

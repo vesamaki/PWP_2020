@@ -1,5 +1,5 @@
 '''
-Docstring to models
+This module holds class-definitions for the API equipment database models.
 '''
 
 # Library imports
@@ -25,15 +25,10 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 
 class Component(db.Model):
     '''
-    Class docstring here
+    This class defines the database model for components.
     '''
 
     # Check that date_retired is not before date_added.
-    # Category and date_retired form a unique entity.
-    # Following won't work, because
-    # SQLite treats all NULL values as different, therefore,
-    # a column with a UNIQUE constraint can have
-    # multiple NULL values. -> Setting to far in the future
     __table_args__ = (db.CheckConstraint('date_retired > date_added',
                                          name='_c_add_bfr_retire_cc'),
                       db.UniqueConstraint("category", "date_retired",
@@ -58,7 +53,7 @@ class Component(db.Model):
 
     def __repr__(self):
         '''
-        Docstring to here, check Ex2 beginning
+        Return the canonical string representation of the object.
         '''
 
         return "[{}] {} brand {} and model {}" \
@@ -75,7 +70,7 @@ class Component(db.Model):
 
 class Ride(db.Model):
     '''
-    Class docstring here
+    This class defines the database model for ride. (NOT USED BY THE API)
     '''
 
     # Check that 0 duration rides are not accepted.
@@ -110,7 +105,7 @@ class Ride(db.Model):
 
     def __repr__(self):
         '''
-        Docstring to here, check Ex2 beginning
+        Return the canonical string representation of the object.
         '''
 
         return "[{}] {} duration {}" \
@@ -125,7 +120,7 @@ class Ride(db.Model):
 
 class Equipment(db.Model):
     '''
-    Class docstring here
+    This class defines the database model for equipment.
     '''
 
     # Check that date_retired is not before date_added.
@@ -166,7 +161,7 @@ class Equipment(db.Model):
 
     def __repr__(self):
         '''
-        Docstring to here, check Ex2 beginning
+        Return the canonical string representation of the object.
         '''
 
         return "[{}] {}, brand {} and model {}" \
@@ -183,7 +178,7 @@ class Equipment(db.Model):
 
 class User(db.Model):
     '''
-    Class docstring here
+    This class defines the database model for user.
     '''
 
     id = db.Column(db.Integer, primary_key=True)
@@ -201,11 +196,11 @@ class User(db.Model):
                            uselist=False,
                            order_by=(Ride.datetime, Ride.name)
                            )
-    # Adapted from PWP Ex2
 
+    # Adapted from PWP Ex2
     def __repr__(self):
         '''
-        Docstring to here, check Ex2 beginning
+        Return the canonical string representation of the object.
         '''
 
         return "[{}] {}".format(self.id, self.name)

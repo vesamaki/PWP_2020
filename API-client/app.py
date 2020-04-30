@@ -48,7 +48,7 @@ def main():
         with requests.Session() as s:
             SERVER_URL, href, method = api_entry(s)
             SERVER_URL = SERVER_URL.strip("/api/")
-            print("DEBUG MAIN:\t\tFull URL: ", SERVER_URL + href, "\r\n")
+            # print("DEBUG MAIN:\t\tFull URL: ", SERVER_URL + href, "\r\n")
             try:
                 body = None
                 while True:
@@ -57,12 +57,12 @@ def main():
                         print_line()
                         print("\r\nCurrent route: {}".format(href))
                         href, method, schema = process_body(body)
-                        print("DEBUG MAIN:\t\thref after process is: ", href)
-                        print("DEBUG MAIN:\t\tmethod after"
-                              "process is: ", method)
+                        # print("DEBUG MAIN:\t\thref after process is: ", href)
+                        # print("DEBUG MAIN:\t\tmethod after"
+                        #       "process is: ", method)
                     if method == "get":
-                        print("DEBUG MAIN:\t\thref for GET is: ", href)
-                        print("DEBUG MAIN:\t\tGETting: ", SERVER_URL + href)
+                        # print("DEBUG MAIN:\t\thref for GET is: ", href)
+                        # print("DEBUG MAIN:\t\tGETting: ", SERVER_URL + href)
                         try:
                             # Resfresh UI
                             get_body = get_resource(s, SERVER_URL + href)
@@ -70,14 +70,14 @@ def main():
                             print("\n", err)
                             input("Press Enter to continue...")
                         except JSONDecodeError:
-                            print("Server response was not a"
+                            print("Server response was not a "
                                   "valid JSON document.")
                             input("Press Enter to continue...")
                         else:
                             body = get_body
                     elif method == "post":
-                        print("DEBUG MAIN:\t\thref for POST is: ", href)
-                        print("DEBUG MAIN:\t\tPOSTing: ", SERVER_URL + href)
+                        # print("DEBUG MAIN:\t\thref for POST is: ", href)
+                        # print("DEBUG MAIN:\t\tPOSTing: ", SERVER_URL + href)
                         try:
                             # Post new resource
                             resp = post_resource(s, SERVER_URL + href, schema)
@@ -109,8 +109,8 @@ def main():
                             print("\n", err)
                             input("Press Enter to continue...")
                     elif method == "put":
-                        print("DEBUG MAIN:\t\thref for PUT is: ", href)
-                        print("DEBUG MAIN:\t\tPUTing: ", SERVER_URL + href)
+                        # print("DEBUG MAIN:\t\thref for PUT is: ", href)
+                        # print("DEBUG MAIN:\t\tPUTing: ", SERVER_URL + href)
                         try:
                             # Make changes
                             resp = put_resource(s, SERVER_URL + href, schema)
@@ -125,8 +125,8 @@ def main():
                             print("\n", err)
                             input("Press Enter to continue...")
                     elif method == "delete":
-                        print("DEBUG MAIN:\t\thref for DELETE is: ", href)
-                        print("DEBUG MAIN:\t\tDELETing: ", SERVER_URL + href)
+                        # print("DEBUG MAIN:\t\thref for DELETE is: ", href)
+                        # print("DEBUG MAIN:\t\tDELETing: ", SERVER_URL + href)
                         try:
                             # Delete resource
                             resp = delete_resource(s, SERVER_URL + href)

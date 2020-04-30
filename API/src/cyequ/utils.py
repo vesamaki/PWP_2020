@@ -1,5 +1,6 @@
 '''
-Docstring to utils
+This module holds utility functions used by the api module
+and resource modules.
 '''
 
 # Library imports
@@ -17,7 +18,7 @@ from cyequ.static.schemas.component_schema import component_schema
 class MasonBuilder(dict):
     '''
     A convenience class for managing dictionaries that represent Mason
-    objects. It provides nice shorthands for inserting some of the more
+    objects. It provides nice shorthands for inserting some of the more general
     elements into the object but mostly is just a parent for the much more
     useful subclass defined next. This class is generic in the sense that it
     does not contain any application specific implementation details.
@@ -81,12 +82,16 @@ class MasonBuilder(dict):
 
 class CommonBuilder(MasonBuilder):
     '''
-    Class docstring here
+    This class subclasses the general MasonBuilder class as a further
+    convenience class for managing dictionaries that represent Mason
+    objects. It provides nice shorthands for inserting elements used commonly
+    between application specific resources into the object. It is also mostly
+    just a parent for the resource specific subclasses defined next.
     '''
 
     def add_control_all_users(self):
         '''
-        Docstring here
+        Builds the control for getting the users-all resource.
         '''
 
         self.add_control(
@@ -99,7 +104,7 @@ class CommonBuilder(MasonBuilder):
 
     def add_control_all_equipment(self, user):
         '''
-        Docstring here
+        Builds the control for getting the equipment-owned resource.
         '''
 
         self.add_control(
@@ -113,12 +118,14 @@ class CommonBuilder(MasonBuilder):
 
 class UserBuilder(CommonBuilder):
     '''
-    Class docstring here
+    This class subclasses the CommonBuilder class for managing dictionaries
+    that represent Mason objects. It provides shorthands for inserting elements
+    used commonly between user resources into the object.
     '''
 
     def add_control_add_user(self):
         '''
-        Docstring here
+        Builds the control for adding a user resource.
         '''
 
         self.add_control(
@@ -132,7 +139,7 @@ class UserBuilder(CommonBuilder):
 
     def add_control_edit_user(self, user):
         '''
-        Docstring here
+        Builds the control for editing a user resource.
         '''
 
         self.add_control(
@@ -147,12 +154,14 @@ class UserBuilder(CommonBuilder):
 
 class EquipmentBuilder(CommonBuilder):
     '''
-    Class docstring here
+    This class subclasses the CommonBuilder class for managing dictionaries
+    that represent Mason objects. It provides shorthands for inserting elements
+    used commonly between equipment resources into the object.
     '''
 
     def add_control_add_equipment(self, user):
         '''
-        Docstring here
+        Builds the control for adding an equipment resource.
         '''
 
         self.add_control(
@@ -166,7 +175,7 @@ class EquipmentBuilder(CommonBuilder):
 
     def add_control_add_component(self, user, equipment):
         '''
-        Docstring here
+        Builds the control for adding a component resource.
         '''
 
         self.add_control(
@@ -180,7 +189,7 @@ class EquipmentBuilder(CommonBuilder):
 
     def add_control_edit_equipment(self, user, equipment):
         '''
-        Docstring here
+        Builds the control for editing an equipment resource.
         '''
 
         self.add_control(
@@ -194,7 +203,7 @@ class EquipmentBuilder(CommonBuilder):
 
     def add_control_delete_equipment(self, user, equipment):
         '''
-        Docstring here
+        Builds the control for deleting an equipment resource.
         '''
 
         self.add_control(
@@ -207,12 +216,14 @@ class EquipmentBuilder(CommonBuilder):
 
 class ComponentBuilder(CommonBuilder):
     '''
-    Class docstring here
+    This class subclasses the CommonBuilder class for managing dictionaries
+    that represent Mason objects. It provides shorthands for inserting elements
+    used commonly between component resources into the object.
     '''
 
     def add_control_edit_component(self, user, equipment, component):
         '''
-        Docstring here
+        Builds the control for editing a component resource.
         '''
         self.add_control(
             "edit",
@@ -228,7 +239,7 @@ class ComponentBuilder(CommonBuilder):
 
     def add_control_delete_component(self, user, equipment, component):
         '''
-        Docstring here
+        Builds the control for deleting a component resource.
         '''
         self.add_control(
             "cyequ:delete",
@@ -241,13 +252,16 @@ class ComponentBuilder(CommonBuilder):
         )
 
 
+# From PWP-course Ex3
 def create_error_response(status_code, title, message=None):
     '''
-    Docstring here
+    Builds the body and adds controls for an error response as defined
+    in API design.
     '''
 
-    # print("Throwing error response: {} {} ".format(status_code, title))
+    # Grab the URL of the request that produced the error
     resource_url = request.path
+    # Build the body
     body = MasonBuilder(resource_url=resource_url)
     body.add_error(title, message)
     body.add_control("profile", href=ERROR_PROFILE)
@@ -256,19 +270,10 @@ def create_error_response(status_code, title, message=None):
 
 def convert_req_date(request_date):
     '''
-    Docstring here
+    Converts a datetime string to a datetime object.
     '''
 
     if request_date is not None:
         return datetime.strptime(request_date, "%Y-%m-%d %H:%M:%S")
     else:
         return None
-
-
-def hashit(input):
-    '''
-    This function will create a hash from a combination of input obj and
-    datetime.now() output.
-    '''
-
-    return abs(hash(str(input) + str(datetime.utcnow())))

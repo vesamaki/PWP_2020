@@ -38,12 +38,12 @@ class APIError(Exception):
                        )
 
 
-def print_line():
+def print_line(length=81):
     '''
     Simply prints a line of 80 '-' characters.
     '''
 
-    for i in range(81):
+    for i in range(length):
         print("-", end="")
     else:
         print("")
@@ -157,14 +157,12 @@ def process_body(body):
     # included in response as the last part
     if "items" in body:
         print("\r\nResource's items:")
+        print_line(41)
         for i, val in enumerate(body["items"]):
             print("[{}]".format(i+1), end="")
             for key in val.keys():
-                # Print data of each item
-                if key != "@controls":
-                    print("\t{}: {}".format(key, body["items"][i][key]))
                 # Print link relation "self" for each item
-                else:
+                if not key != "@controls":
                     for ctrl in body["items"][i][key].keys():
                         if ctrl == "self":
                             href_list = body["items"][i][key][ctrl]["href"] \
@@ -173,14 +171,25 @@ def process_body(body):
                             # The last is "" (empty string) from href-
                             # split method.
                             kwrd = href_list[-2]
-                            print("\tLink relation - \tname: "
-                                  "{}\n\t\t\t\tURI: {}\n\t\t\t\thref: {}"
+                            print("\tLink relation - name: "
+                                  "{}\n\t\t\tURI: {}\n\t\t\thref: {}"
                                   .format(ctrl,
                                           kwrd,
                                           body["items"][i][key][ctrl]["href"]
                                           )
                                   )
-            print("")
+            else:
+                print("")
+            for key in val.keys():
+                # Print data of each item
+                if key != "@controls":
+                    if len(key) > 4:
+                        pad = "\t"
+                    else:
+                        pad = "\t\t"
+                    print("\t{}: {}{}".format(key, pad, body["items"][i][key]))
+            else:
+                print_line(41)
     else:
         print("\r\nResource has no item data.")
     # User selection for next resource + method
@@ -191,14 +200,14 @@ def process_body(body):
               "\nTerminate program with 'q'"
               )
         kwrd = input("\r\nType in your selection: ")
-        print("DEBUG:\t\tInput kwrd: ", kwrd)
+        # print("DEBUG:\t\tInput kwrd: ", kwrd)
         if kwrd.lower() == "q":
-            print("DEBUG:\t\tInput kwrd was 'q'")
+            # print("DEBUG:\t\tInput kwrd was 'q'")
             href, method, schema = None, None, None
             break
         elif kwrd in body["@controls"].keys():
             href = body["@controls"][kwrd]["href"]
-            print("DEBUG:\t\tSaving body-control href")
+            # print("DEBUG:\t\tSaving body-control href")
             # Check if method given
             if "method" in body["@controls"][kwrd].keys():
                 method = body["@controls"][kwrd]["method"].lower()
@@ -210,7 +219,7 @@ def process_body(body):
                 schema = body["@controls"][kwrd]["schema"]
             else:
                 schema = None
-            print("DEBUG:\t\tBreak from body-controls")
+            # print("DEBUG:\t\tBreak from body-controls")
             break
         # Make sure response body includes "items" list
         elif "items" in body:
@@ -243,13 +252,13 @@ def process_body(body):
             no_match = False
             print("\nYour input didn't match any link relation. Try again or "
                   "type 'q' to quit.\n")
-    print("DEBUG:\t\thref is now: ", href)
-    print("DEBUG:\t\tmethod is now: ", method)
+    # print("DEBUG:\t\thref is now: ", href)
+    # print("DEBUG:\t\tmethod is now: ", method)
     # for debuging - remove...
-    if schema:
-        print("DEBUG:\t\tSchema is not None")
-    else:
-        print("DEBUG:\t\tschema is now: ", schema)
+    # if schema:
+        # print("DEBUG:\t\tSchema is not None")
+    # else:
+        # print("DEBUG:\t\tschema is now: ", schema)
     return href, method, schema
 
 
@@ -261,7 +270,7 @@ def get_resource(s, href):
     '''
 
     resp = s.get(href)
-    print("DEBUG GET:\t\tStatus code: ", resp.status_code)
+    # print("DEBUG GET:\t\tStatus code: ", resp.status_code)
     if resp.status_code != 200:
         raise APIError(resp.status_code, resp.content)
     else:
@@ -653,7 +662,6 @@ def extract_prev_href(href):
 def delete_resource(s, href):
     '''
     Function for DELETE-request.
-
     Returns delete response object provided by requests.
     '''
 

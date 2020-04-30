@@ -1,3 +1,7 @@
+'''
+This module is the setup file of cyequ-package.
+'''
+
 from setuptools import find_packages, setup
 
 setup(

@@ -4,14 +4,6 @@ This module includes the functionality of
 Run with:
     flask run
 See https://github.com/vesamaki/PWP_2020 for details
-
-
-NOTES:
-api.ulr_for -> ulr_for:
-    href = url_for("api.sensoritem", sensor="uo-donkeysensor-1")
-    Resources defined here in api.
-    In unit tests you need to take care to
-    use the with app.app_context() statement.
 """
 
 # Library imports
@@ -36,35 +28,50 @@ from cyequ.resources.equipment import EquipmentByUser, \
 from cyequ.resources.component import ComponentItem  # noqa:E402
 
 # Adapted from PWP Ex3
-# Static route: Link relations - DONE
+# Static route: Link relations
 @api_bp.route(LINK_RELATIONS_URL, methods=['GET'])
 def redirect_to_apiary_link_rels():
+    '''
+    Redirect to API's APIARY-documentation for link relations url.
+    '''
     return redirect(APIARY_URL + "link-relations")
 
-# Static route: User Profile - DONE
+# Static route: User Profile
 @api_bp.route(USER_PROFILE, methods=['GET'])
 def redirect_to_apiary_user_prof():
+    '''
+    Redirect to API's APIARY-documentation for user profile url.
+    '''
     return redirect(APIARY_URL + "user-profile")
 
-# Static route: Equipment Profile - DONE
+# Static route: Equipment Profile
 @api_bp.route(EQUIPMENT_PROFILE, methods=['GET'])
 def redirect_to_apiary_equip_prof():
+    '''
+    Redirect to API's APIARY-documentation for equipment profile url.
+    '''
     return redirect(APIARY_URL + "equipment-profile")
 
-# Static route: Component Profile - DONE
+# Static route: Component Profile
 @api_bp.route(COMPONENT_PROFILE, methods=['GET'])
 def redirect_to_apiary_comp_prof():
+    '''
+    Redirect to API's APIARY-documentation for component profile url.
+    '''
     return redirect(APIARY_URL + "component-profile")
 
-# Static route: Error Profile - DONE
+# Static route: Error Profile
 @api_bp.route(ERROR_PROFILE, methods=['GET'])
 def redirect_to_apiary_err_prof():
+    '''
+    Redirect to API's APIARY-documentation for error profile url.
+    '''
     return redirect(APIARY_URL + "error-profile")
 
 
-# Registering resource routes - DONE
-api.add_resource(Entry, "/api/")  # DONE
-api.add_resource(UserCollection, "/api/users/")  # DONE
+# Registering resource routes
+api.add_resource(Entry, "/api/")
+api.add_resource(UserCollection, "/api/users/")
 api.add_resource(UserItem, "/api/users/<user>/")
 api.add_resource(EquipmentByUser, "/api/users/<user>/all_equipment/")
 api.add_resource(EquipmentItem, "/api/users/<user>/all_equipment/<equipment>/")

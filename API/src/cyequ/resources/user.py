@@ -1,5 +1,5 @@
 '''
-Docstring to user resource routes
+This module holds class-definitions for the API user resources.
 '''
 
 # Library imports
@@ -19,12 +19,15 @@ from cyequ.static.schemas.user_schema import user_schema
 
 class UserCollection(Resource):
     '''
-    Class docstring here
+    This class defines responses for UserCollection resource.
     '''
 
     def get(self):
         '''
-        GET-method definition for UserCollection resource. - Untested
+        GET-method definition.
+        Builds the response body and adds controls as defined in API design
+
+        Returns flask Response object.
         '''
 
         # Instantiate message body
@@ -50,7 +53,17 @@ class UserCollection(Resource):
 
     def post(self):
         '''
-        POST-method definition for UserCollection resource. - Untested
+        POST-method definition.
+        Checks for appropriate request body and creates a new user resource
+        in the API.
+
+        Exceptions.
+        jsonschema.ValidationError. If request is not
+            a valid JSON document.
+        sqlalchemy.exc.IntegrityError. Violation of SQLite database
+            integrity.
+
+        Returns flask Response object.
         '''
 
         # Check for json.
@@ -103,12 +116,15 @@ class UserCollection(Resource):
 
 class UserItem(Resource):
     '''
-    Class docstring here
+    This class defines responses for UserItem resource.
     '''
 
     def get(self, user):
         '''
-        GET-method definition for UserItem resource. - Untested
+        GET-method definition.
+        Builds the response body and adds controls as defined in API design
+
+        Returns flask Response object.
         '''
 
         # Find user by name in database. If not found, respond with error 404
@@ -133,8 +149,17 @@ class UserItem(Resource):
 
     def put(self, user):
         '''
-        PUT-method definition for UserItem resource. - Untested
+        PUT-method definition.
+        Checks for appropriate request body and modifies a resource in the
+        API.
 
+        Exceptions.
+        jsonschema.ValidationError. If request is not
+            a valid JSON document.
+        sqlalchemy.exc.IntegrityError. Violation of SQLite database
+            integrity.
+
+        Returns flask Response object.
         '''
 
         # Check for json. If fails, respond with error 415
