@@ -16,7 +16,6 @@ from cyequ.constants import USER_PROFILE, EQUIPMENT_PROFILE, \
                             LINK_RELATIONS_URL, APIARY_URL
 
 api_bp = Blueprint("api", __name__)
-# ref_bp = Blueprint("reference", __name__)  # , url_prefix="")
 api = Api(api_bp)
 
 # this import must be placed after we create api to avoid issues with

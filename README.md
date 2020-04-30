@@ -14,7 +14,6 @@ When POSTing data over API to backend, require client timezone info in request b
 When providing time data to a request, tell also the timezone (stored as UTC in database). Client can then convert as needed and deal with daylight saving time as well.
 
 ### TODO: ###
-#####    docstrings to all. #####
 
 ##### Write API-client README #####
 

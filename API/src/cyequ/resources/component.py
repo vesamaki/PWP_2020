@@ -219,15 +219,6 @@ class ComponentItem(Resource):
                                          .format(component)
                                          )
         # Delete equipment
-#        try:
         db.session.delete(db_comp)
         db.session.commit()
-#        except IntegrityError:
-#            # In case of database error
-#            db.session.rollback()
-#            return create_error_response(500, "Internal Server Error",
-#                                         "The server encountered an "
-#                                         "unexpected condition that prevented"
-#                                         " it from fulfilling the request."
-#                                         )
         return Response(status=204)

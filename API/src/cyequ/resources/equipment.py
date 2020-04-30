@@ -80,6 +80,7 @@ class EquipmentByUser(Resource):
 
         Returns flask Response object.
         '''
+
         # Check for json. If fails, respond with error 415
         if request.json is None:
             return create_error_response(415, "Unsupported media type",
@@ -139,16 +140,7 @@ class EquipmentByUser(Resource):
         db_equip = Equipment.query.filter_by(name=request.json["name"]).first()
         # Create URI for user
         db_equip.uri = db_equip.name + str(db_equip.id)
-#        try:
         db.session.commit()
-#        except IntegrityError:
-#            # In case of database error
-#            db.session.rollback()
-#            return create_error_response(500, "Internal Server Error",
-#                                         "The server encountered an "
-#                                         "unexpected condition that prevented"
-#                                         " it from fulfilling the request."
-#                                         )
         # Respond with location of new resource
         return Response(status=201,
                         headers={"Location":
@@ -259,6 +251,7 @@ class EquipmentItem(Resource):
 
         Returns flask Response object.
         '''
+
         # Check for json. If fails, respond with error 415
         if request.json is None:
             return create_error_response(415, "Unsupported media type",
@@ -312,7 +305,6 @@ class EquipmentItem(Resource):
         # Check if date_retired given and convert
         p_date_retired = convert_req_date(request.json.get("date_retired"))
         if p_date_retired is not None:
-            # if request.json["date_added"] >= request.json["date_retired"]:  # noqa: E501
             if p_date_added >= p_date_retired:
                 return create_error_response(409, "Inconsistent dates",
                                              "Retire date {} must be in the "
@@ -355,16 +347,7 @@ class EquipmentItem(Resource):
                                             ).first()
         # Create URI for user
         db_comp.uri = db_comp.name + str(db_comp.id)
-#        try:
         db.session.commit()
-#        except IntegrityError:
-#            # In case of database error
-#            db.session.rollback()
-#            return create_error_response(500, "Internal Server Error",
-#                                         "The server encountered an "
-#                                         "unexpected condition that prevented"
-#                                         " it from fulfilling the request."
-#                                         )
         # Respond with location of new resource
         return Response(status=201,
                         headers={"Location":
@@ -495,15 +478,6 @@ class EquipmentItem(Resource):
                                          .format(equipment)
                                          )
         # Delete equipment
-#        try:
         db.session.delete(db_equip)
         db.session.commit()
-#        except IntegrityError:
-#            # In case of database error
-#            db.session.rollback()
-#            return create_error_response(500, "Internal Server Error",
-#                                         "The server encountered an "
-#                                         "unexpected condition that prevented"
-#                                         " it from fulfilling the request."
-#                                         )
         return Response(status=204)

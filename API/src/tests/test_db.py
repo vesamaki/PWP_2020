@@ -29,7 +29,6 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 
 # Adapted from Ex2
 # based on http://flask.pocoo.org/docs/1.0/testing/
-# we don't need a client for database testing, just the db handle
 @pytest.fixture
 def app():
     '''
@@ -544,26 +543,6 @@ def test_equipment_columns(app):
             db.session.commit()
 
 
-# def test_component_repr(app):
-#    """
-#    Trying to test the __repr__ method for better coverage, but Miss 63 of
-#    models.py not disappearing. No time to go to details
-#    """
-#    user = _get_user()
-#    equipment = _get_equipment()
-#    component = _get_component()
-#    with app.app_context():
-#        db.session.add(user)
-#        db.session.add(equipment)
-#        db.session.add(component)
-#        db.session.commit()
-#        assert Component.query.get(1) == "[1] None brand Fox and model " \
-#                                         "34 Factory added on "\
-#                                         "2018-11-21 11:20:30 and" \
-#                                         " retired on None, " \
-#                                         "part of equip 1"
-
-
 def test_component_columns(app):
     """
     Tests component columns' restrictions. Category, brand, model and
@@ -752,7 +731,7 @@ def test_ride_columns(app):
 
         db.session.rollback()
 
-    # duration greater than zero
+    # Duration greater than zero
     ride = _get_ride()
     ride.duration = 0
     with app.app_context():

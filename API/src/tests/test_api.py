@@ -14,7 +14,6 @@ from sqlalchemy.engine import Engine
 from sqlalchemy import event
 
 from cyequ import create_app, db
-# from cyequ.models import User, Equipment, Component  # , Ride
 
 from tests.utils import _get_user_json, _get_equipment_json, \
                         _get_component_json, _check_namespace, _check_profile, \
@@ -159,9 +158,11 @@ class TestUserItem(object):
     resource.
     '''
 
-    # RESOURCE_URL = "/api/users/Joonas1/"
     @staticmethod
     def resource_URL(user="Joonas", id=1):
+        '''
+        Used to shorthand generate and return a resource url
+        '''
         return "/api/users/{}{}/".format(user.replace(" ", "%20"), str(id))
 
     def test_get(self, client):
@@ -246,9 +247,11 @@ class TestEquipmentByUser(object):
     resource.
     '''
 
-    # RESOURCE_URL = "/api/users/Joonas/all_equipment/"
     @staticmethod
     def resource_URL(user="Joonas", id=1):
+        '''
+        Used to shorthand generate and return a resource url
+        '''
         return "/api/users/{}{}/all_equipment/" \
                .format(user.replace(" ", "%20"), str(id))
 
@@ -331,7 +334,7 @@ class TestEquipmentByUser(object):
         # Test Location header
         header_URI = valid["name"].replace(" ", "%20") + "3"
         assert resp.headers["Location"] \
-            .endswith(self.resource_URL() + header_URI + "/")  # noqa: E501
+            .endswith(self.resource_URL() + header_URI + "/")
         # Follow location header and test response
         resp = client.get(resp.headers["Location"])
         assert resp.status_code == 200
@@ -360,6 +363,9 @@ class TestEquipmentItem(object):
 
     @staticmethod
     def resource_URL(user="Joonas", equipment="Polkuaura", u_id=1, e_id=1):
+        '''
+        Used to shorthand generate and return a resource url
+        '''
         return "/api/users/{}{}/all_equipment/{}{}/" \
                .format(user.replace(" ", "%20"),
                        str(u_id),
@@ -506,7 +512,6 @@ class TestEquipmentItem(object):
                            json=valid
                            )
         assert resp.status_code == 409
-        # Test inconsistent dates, date_added < date_retired
         # Test component date_added < equipment date_added
         valid = _get_component_json(name="Etukesäkiekko",
                                     category="Front Wheel",
@@ -593,9 +598,6 @@ class TestEquipmentItem(object):
         assert resp.status_code == 409
         body = json.loads(resp.data)
         assert body["@error"]["@message"] == "Inconsistent dates"
-#        assert str(body["@error"]["@messages"]) == "[\'No user was " \
-#                                                   "found with URI {}\']" \
-#                                                   .format("Jaana1")
         # Test that retiring equipment also retires associated components
         valid = _get_equipment_json(date_retired="2019-12-21 11:20:40")
         client.put(self.resource_URL(),
@@ -645,6 +647,9 @@ class TestComponentItem(object):
                      e_id=1,
                      component="Hissitolppa",
                      c_id=1):
+        '''
+        Used to shorthand generate and return a resource url
+        '''
         return "/api/users/{}{}/all_equipment/{}{}/{}{}/" \
                .format(user.replace(" ", "%20"),
                        str(u_id),
