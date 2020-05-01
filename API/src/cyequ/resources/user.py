@@ -33,7 +33,10 @@ class UserCollection(Resource):
         body = UserBuilder(items=[])
         # Add general controls to message body
         body.add_namespace("cyequ", LINK_RELATIONS_URL)
-        body.add_control("self", url_for("api.usercollection"))
+        body.add_control("self",
+                         url_for("api.usercollection"),
+                         title="Get a list of all users know to the API."
+                         )
         body.add_control_add_user()
         # Loop through all users in database and build each item with data and
         # controls.
@@ -43,9 +46,13 @@ class UserCollection(Resource):
             usr.add_control("self",
                             url_for("api.useritem",
                                     user=db_user.uri
-                                    )
+                                    ),
+                            title="Get this user's information."
                             )
-            usr.add_control("profile", USER_PROFILE)
+            usr.add_control("profile",
+                            USER_PROFILE,
+                            title="Get profile of user resource."
+                            )
             # Append each item to items-list of response body
             body["items"].append(usr)
         return Response(json.dumps(body), 200, mimetype=MASON)
@@ -130,9 +137,18 @@ class UserItem(Resource):
         )
         # Add controls to message body
         body.add_namespace("cyequ", LINK_RELATIONS_URL)
-        body.add_control("self", url_for("api.useritem", user=user))
-        body.add_control("profile", USER_PROFILE)
-        body.add_control("collection", url_for("api.usercollection"))
+        body.add_control("self",
+                         url_for("api.useritem", user=user),
+                         title="Get this user's information."
+                         )
+        body.add_control("profile",
+                         USER_PROFILE,
+                         title="Get profile of user resource."
+                         )
+        body.add_control("collection",
+                         url_for("api.usercollection"),
+                         title="Get a list of all users know to the API."
+                         )
         body.add_control_edit_user(user)
         body.add_control_all_equipment(user)
         return Response(json.dumps(body), 200, mimetype=MASON)

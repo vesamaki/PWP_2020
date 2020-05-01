@@ -65,17 +65,23 @@ class ComponentItem(Resource):
                                 )
         # Add controls to message body
         body.add_namespace("cyequ", LINK_RELATIONS_URL)
-        body.add_control("self", url_for("api.componentitem",
-                                         user=user,
-                                         equipment=equipment,
-                                         component=component
-                                         )
+        body.add_control("self",
+                         url_for("api.componentitem",
+                                 user=user,
+                                 equipment=equipment,
+                                 component=component
+                                 ),
+                         title="Get this component's information."
                          )
-        body.add_control("profile", COMPONENT_PROFILE)
+        body.add_control("profile",
+                         COMPONENT_PROFILE,
+                         title="Get profile of component resource."
+                         )
         body.add_control("up", url_for("api.equipmentitem",
                                        user=user,
                                        equipment=equipment
-                                       )
+                                       ),
+                         title="Get associated equipment's information."
                          )
         body.add_control_all_users()
         body.add_control_edit_component(user, equipment, component)

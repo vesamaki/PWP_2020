@@ -112,7 +112,7 @@ class CommonBuilder(MasonBuilder):
             href=url_for("api.equipmentbyuser", user=user),
             method="GET",
             encoding="json",
-            title="A list of all equipment owned by the given user's name."
+            title="A list of all equipment owned by the given user."
         )
 
 

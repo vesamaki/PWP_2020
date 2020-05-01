@@ -45,8 +45,15 @@ class EquipmentByUser(Resource):
         body = EquipmentBuilder(items=[])
         # Add general controls to message body
         body.add_namespace("cyequ", LINK_RELATIONS_URL)
-        body.add_control("self", url_for("api.equipmentbyuser", user=user))
-        body.add_control("cyequ:owner", url_for("api.useritem", user=user))
+        body.add_control("self",
+                         url_for("api.equipmentbyuser", user=user),
+                         title="Get a list of all equipment owned by "
+                               "the given user."
+                         )
+        body.add_control("cyequ:owner",
+                         url_for("api.useritem", user=user),
+                         title="Get associated user's information."
+                         )
         body.add_control_add_equipment(user)
         # Loop through all equipment items owned by user
         for equipment in db_user.hasEquip:
@@ -59,9 +66,13 @@ class EquipmentByUser(Resource):
             equip.add_control("self", url_for("api.equipmentitem",
                                               user=user,
                                               equipment=equipment.uri
-                                              )
+                                              ),
+                              title="Get this equipment's information."
                               )
-            equip.add_control("profile", EQUIPMENT_PROFILE)
+            equip.add_control("profile",
+                              EQUIPMENT_PROFILE,
+                              title="Get the profile of equipment resource."
+                              )
             # Append each item to items-list of response body
             body["items"].append(equip)
         return Response(json.dumps(body), 200, mimetype=MASON)
@@ -214,9 +225,13 @@ class EquipmentItem(Resource):
                                              user=user,
                                              equipment=equipment,
                                              component=component.uri
-                                             )
+                                             ),
+                             title="Get this component's information."
                              )
-            comp.add_control("profile", COMPONENT_PROFILE)
+            comp.add_control("profile",
+                             COMPONENT_PROFILE,
+                             title="Get profile of component resource."
+                             )
             # Append each item to items-list of response body
             body["items"].append(comp)
         # Add controls response message body
@@ -224,11 +239,16 @@ class EquipmentItem(Resource):
         body.add_control("self", url_for("api.equipmentitem",
                                          user=user,
                                          equipment=equipment
-                                         )
+                                         ),
+                         title="Get this equipment's information."
                          )
-        body.add_control("profile", EQUIPMENT_PROFILE)
+        body.add_control("profile",
+                         EQUIPMENT_PROFILE,
+                         title="Get profile of equipment resource."
+                         )
         body.add_control("cyequ:owner",
-                         url_for("api.equipmentbyuser", user=user)
+                         url_for("api.equipmentbyuser", user=user),
+                         title="Get associated user's information."
                          )
         body.add_control_all_users()
         body.add_control_all_equipment(user)
