@@ -55,6 +55,9 @@ __set FLASK_ENV=development__
 Setup the database:  
 __flask init-db__
 
+The database can be populated with test data using command:
+__flask testgen__
+
 Then run flask with command:  
 __flask run__
 
@@ -83,7 +86,7 @@ Using this sort of testing does not require Flask to run, or even data to exist 
 Change directory to your project folder. Both tests can be run with command:  
 __pytest ./src/tests/ --cov=./src/cuequ/ --cov-report term-missing__
 
-Regarding main errors I detected thanks to functional testing, where should I begin? The testing was a multiday exercise and frankly I no longer remember (after two weeks now when writing this) what were the most significant or reoccurring errors. I just remember having to make corrections a lot. The testing did remind me of adding checks to the code for things such as date_retired not being in the future of date_added. 
+Regarding main errors I detected thanks to functional testing, where should I begin? The testing was a multiday exercise and frankly I no longer remember (after two weeks now when writing this) what were the most significant or reoccurring errors. I just remember having to make corrections a lot. The testing did remind me of adding checks to the code for things such as date_retired not being in the future of date_added.
 
 **NOTE ON TEST COVERAGE**  
 For some reason, test_api.py tests won't cover many of the error responses even though they are asserted. I.e. test_api.py lines test 197-203 should cover user.py missing line 155 of coverage report. Most of the missing lines have the same problem, though I didn't write tests for all after noticing the coverage behavior of above example.

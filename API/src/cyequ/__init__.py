@@ -75,6 +75,9 @@ def create_app(test_config=None):
     # Register the init-db command for the Flask instance
     # Use as "flask init-db" in CMD
     app.cli.add_command(models.init_db_command)
+    # Register the testgen command for the Flask instance
+    # Use as "flask testgen" in CMD
+    app.cli.add_command(models.add_test_data)
     # API blueprint defined in api, but
     # import inside this function to prevent circular imports
     from cyequ import api

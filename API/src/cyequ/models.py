@@ -214,3 +214,60 @@ def init_db_command():
     Creating custom command for Flask to initialize database
     '''
     db.create_all()
+
+# Adapted from PWP Ex4 material:
+@click.command("testgen")
+@with_appcontext
+def add_test_data():
+    from datetime import datetime
+    '''
+    Creating custom command for Flask to add test data to the database
+    '''
+    user1 = User(uri="Joonas1",
+                 name="Joonas"
+                 )
+    user2 = User(uri="Janne2",
+                 name="Janne"
+                 )
+    equipment1 = Equipment(uri="Polkuaura1",
+                           name="Polkuaura",
+                           category="Mountain Bike",
+                           brand="Kona",
+                           model="Hei Hei",
+                           date_added=datetime(2019, 11, 21, 11, 20, 30),
+                           owner=1
+                           )
+    equipment2 = Equipment(uri="Kisarassi2",
+                           name="Kisarassi",
+                           category="Road Bike",
+                           brand="Bianchi",
+                           model="Intenso",
+                           date_added=datetime(2019, 11, 21, 11, 20, 30),
+                           date_retired=datetime(2019, 12, 21, 11, 20, 30),
+                           owner=1
+                           )
+    component1 = Component(uri="Hissitolppa1",
+                           name="Hissitolppa",
+                           category="Seat Post",
+                           brand="RockShox",
+                           model="Reverb B1",
+                           date_added=datetime(2019, 11, 21, 11, 20, 30),
+                           date_retired=datetime(9999, 12, 31, 23, 59, 59),
+                           equipment_id=1
+                           )
+    component2 = Component(uri="Takatalvikiekko2",
+                           name="Takatalvikiekko",
+                           category="Rear Wheel",
+                           brand="Sram",
+                           model="Roam AL 650b",
+                           date_added=datetime(2019, 11, 21, 11, 20, 30),
+                           date_retired=datetime(2019, 12, 21, 11, 20, 30),
+                           equipment_id=1
+                           )
+    db.session.add(user1)
+    db.session.add(user2)
+    db.session.add(equipment1)
+    db.session.add(equipment2)
+    db.session.add(component1)
+    db.session.add(component2)
+    db.session.commit()
