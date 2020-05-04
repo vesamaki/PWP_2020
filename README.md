@@ -61,24 +61,6 @@ __flask testgen__
 Then run flask with command:  
 __flask run__
 
-### API-client external library dependencies: ###
-requests >= 2.23.0  
-
-This will be installed if the environment is setup according to the following section.
-
-### Setting up API-client environment ###
-The API client can be run in an instance of the API virtual environment. Alternatively, you can create a separate virtual environment and use the requirements.txt in your-project-folder/API-client/ to install all required dependencies for the client.   Create and activate the client virtual environment.  
-Then change directory to ./API-client/  
-Run command:  
-__pip install -r requirements.txt__
-
-#### Running Flask ####  
-The client is a command line app.  
-Use the command line to change directory to ./API-client. Then run the app by typing __app.py__.
-
-If the API is run on the localhost loopback (127.0.0.1:5000), then the URL to access the API is:  
-__http://localhost:5000/api/__
-
 #### Running Tests ####
 Database tests are included in .\\tests\\test_db.py.  
 API-tests are in .\\tests\\api_test.py.  
@@ -90,3 +72,21 @@ Regarding main errors I detected thanks to functional testing, where should I be
 
 **NOTE ON TEST COVERAGE**  
 For some reason, test_api.py tests won't cover many of the error responses even though they are asserted. I.e. test_api.py lines test 197-203 should cover user.py missing line 155 of coverage report. Most of the missing lines have the same problem, though I didn't write tests for all after noticing the coverage behavior of above example.
+
+### API-client external library dependencies: ###
+requests >= 2.23.0  
+
+This will be installed if the environment is setup according to the following section.
+
+### Setting up API-client environment ###
+The API client can be run in an instance of the API virtual environment. Alternatively, you can create a separate virtual environment and use the requirements.txt in your-project-folder/API-client/ to install all required dependencies for the client.   Create and activate the client virtual environment.  
+Then change directory to ./API-client/  
+Run command:  
+__pip install -r requirements.txt__
+
+#### Running Client ####  
+The client is a command line app.  
+Use the command line to change directory to ./API-client. Then run the app by typing __app.py__.
+
+If the API is run on the localhost loopback (127.0.0.1:5000), then the URL to access the API is:  
+__http://localhost:5000/api/__
